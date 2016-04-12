@@ -12,12 +12,17 @@ var Runner = function (startingPos) {
 Runner.prototype.draw = function (ctx) {
   ctx.fillStyle = "blue";
   ctx.fillRect(this.pos[0], this.pos[1], this.width, this.height)
-}
+};
 
 Runner.prototype.move = function () {
-  this.vel = Util.gravity(this.vel);
   this.pos = [this.pos[0] + this.vel[0],
   this.pos[1] + this.vel[1]];
-}
+  this.vel = Util.gravity(this.vel);
+};
+
+Runner.prototype.collideWithPlatform = function (stopPos) {
+  this.vel = [0, 0];
+  this.pos = stopPos;
+};
 
 module.exports = Runner;

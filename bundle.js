@@ -45,7 +45,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var RunnerGame = __webpack_require__(1);
-	var GameView = __webpack_require__(2);
+	var GameView = __webpack_require__(5);
 	
 	window.document.addEventListener('DOMContentLoaded', function () {
 	  var canvas = window.document.getElementById("canvas");
@@ -80,98 +80,60 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Platform = __webpack_require__(3);
-	var Runner = __webpack_require__(4);
+	var Platform = __webpack_require__(2);
+	var Runner = __webpack_require__(3);
+	var Util = __webpack_require__(4);
 	
 	var RunnerGame = function (frameHeight, frameWidth) {
 	  this.frameHeight = frameHeight;
 	  this.frameWidth = frameWidth;
+	  this.platforms = [];
+	  this.runner = new Runner([150, 40]);
 	
-	  this.testPlatform = new Platform([100, 400], 100, 800);
-	  this.testRunner = new Runner([150, 40]);
+	  var testPlatform = new Platform([100, 400], 100, 800);
+	  this.platforms.push(testPlatform);
 	};
 	
-	RunnerGame.prototype.test = function (ctx) {
-	  this.testRunner.move();
-	  this.testPlatform.draw(ctx);
-	  this.testRunner.draw(ctx);
+	// RunnerGame.prototype.test = function (ctx) {
+	//   this.testRunner.move();
+	//   this.testPlatform.draw(ctx);
+	//   this.testRunner.draw(ctx);
+	// };
+	
+	RunnerGame.prototype.allObjects = function () {
+	  return this.platforms.concat([this.runner]);
 	}
+	
+	RunnerGame.prototype.environmentObjects = function () {
+	  return this.platforms.concat([]);
+	};
+	
+	RunnerGame.prototype.draw = function (ctx) {
+	  this.allObjects().forEach(function (obj) {
+	    obj.draw.call(obj, ctx);
+	  })
+	}
+	
+	RunnerGame.prototype.step = function () {
+	  this.runner.move();
+	  this.checkRunnerCollisions();
+	}
+	
+	RunnerGame.prototype.checkRunnerCollisions = function () {
+	  this.environmentObjects().forEach(function (obj) {
+	    var stopPos = Util.detectCollision(this.runner, obj);
+	    if (stopPos) {
+	      // debugger;
+	      this.runner.collideWithPlatform(stopPos);
+	    }
+	  }.bind(this))
+	};
 	
 	module.exports = RunnerGame;
 
 
 /***/ },
 /* 2 */
-/***/ function(module, exports) {
-
-	// handles game's interaction wtih canvas element
-	
-	var GameView = function (game, ctx) {
-	  this.game = game;
-	  this.ctx = ctx;
-	};
-	
-	GameView.prototype.launch = function () {
-	  this.bindKeyHandlers();
-	  window.requestAnimationFrame(function () {
-	    this.advanceFrame();
-	  }.bind(this));
-	};
-	
-	GameView.prototype.advanceFrame = function () {
-	  this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight)
-	  this.game.test(this.ctx);
-	  // console.log("frame");
-	  window.requestAnimationFrame(function () {
-	    this.advanceFrame();
-	  }.bind(this))
-	};
-	
-	GameView.prototype.bindKeyHandlers = function () {
-	
-	};
-	
-	module.exports = GameView;
-	
-	
-	
-	  // Asteroids.GameView = function (game, ctx) {
-	  //   this.game = game;
-	  //   this.ctx = ctx;
-	  // };
-	  //
-	  // Asteroids.GameView.prototype.start = function (img) {
-	  //   this.bindKeyHandlers();
-	  //   root.setInterval( function () {
-	  //     this.ctx.clearRect(0, 0, this.game.DIM_X, this.game.DIM_Y);
-	  //     this.ctx.drawImage(img, 0, 0, this.game.DIM_X, this.game.DIM_Y);
-	  //     this.checkHeldKeys();
-	  //     this.game.draw(this.ctx);
-	  //     this.game.step();
-	  //   }.bind(this), 16);
-	  // };
-	  //
-	  // Asteroids.GameView.prototype.checkHeldKeys = function () {
-	  //   if (key.isPressed('left')) {
-	  //     this.game.ship.power([-0.2,0]);
-	  //   } else if (key.isPressed('right')) {
-	  //     this.game.ship.power([0.2,0]);
-	  //   } else if (key.isPressed('up')) {
-	  //     this.game.ship.power([0,-0.2]);
-	  //   } else if (key.isPressed('down')) {
-	  //     this.game.ship.power([0,0.2]);
-	  //   }
-	  // };
-	  //
-	  // Asteroids.GameView.prototype.bindKeyHandlers = function () {
-	  //   key('space', function () {
-	  //     this.game.ship.fireBullet();
-	  //   }.bind(this));
-	  // };
-
-
-/***/ },
-/* 3 */
 /***/ function(module, exports) {
 
 	// basic platform for running and jumping on
@@ -192,12 +154,12 @@
 
 
 /***/ },
-/* 4 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// the player-controlled character
 	
-	var Util = __webpack_require__(5);
+	var Util = __webpack_require__(4);
 	
 	var Runner = function (startingPos) {
 	  this.pos = startingPos;
@@ -209,19 +171,24 @@
 	Runner.prototype.draw = function (ctx) {
 	  ctx.fillStyle = "blue";
 	  ctx.fillRect(this.pos[0], this.pos[1], this.width, this.height)
-	}
+	};
 	
 	Runner.prototype.move = function () {
-	  this.vel = Util.gravity(this.vel);
 	  this.pos = [this.pos[0] + this.vel[0],
 	  this.pos[1] + this.vel[1]];
-	}
+	  this.vel = Util.gravity(this.vel);
+	};
+	
+	Runner.prototype.collideWithPlatform = function (stopPos) {
+	  this.vel = [0, 0];
+	  this.pos = stopPos;
+	};
 	
 	module.exports = Runner;
 
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports) {
 
 	var Util = {
@@ -234,10 +201,90 @@
 	
 	  gravity: function (vel) {
 	    return [vel[0], vel[1] + 0.3]
+	  },
+	
+	  detectCollision: function (obj1, obj2) {
+	    // if there is a collision, returns the point obj1 should
+	    // stop at
+	    // otherwise returns null
+	    var obj1Left = obj1.pos[0];
+	    var obj1Right = obj1.pos[0] + obj1.width;
+	    var obj1Top = obj1.pos[1];
+	    var obj1Bottom = obj1.pos[1] + obj1.height;
+	    var obj2Left = obj2.pos[0];
+	    var obj2Right = obj2.pos[0] + obj2.width;
+	    var obj2Top = obj2.pos[1];
+	    var obj2Bottom = obj2.pos[1] + obj2.height;
+	    if (obj1Bottom >= obj2Top && obj1Bottom < obj2Bottom) {
+	      // obj1 hits obj2 from above
+	      return [obj1Left, obj2Top - obj1.height]
+	    } else if (obj1Top <= obj2Bottom && obj1Top > obj2Top) {
+	      // obj1 hits obj2 from below
+	
+	    } else if (obj1Right >= obj2Left && obj1Right < obj2Right) {
+	      // obj1 hits obj2 from the left
+	
+	    } else if (obj1Left <= obj2Right && obj1Left > obj2Left) {
+	      // obj1 hits obj2 from the right
+	
+	    } else {
+	      return null;
+	    }
 	  }
 	};
 	
 	module.exports = Util;
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	// handles game's interaction wtih canvas element
+	
+	var GameView = function (game, ctx) {
+	  this.game = game;
+	  this.ctx = ctx;
+	};
+	
+	GameView.prototype.launch = function () {
+	  this.bindKeyHandlers();
+	  this.drawNextFrame();
+	};
+	
+	GameView.prototype.drawNextFrame = function () {
+	  window.requestAnimationFrame(function () {
+	    this.generateFrame();
+	  }.bind(this))
+	}
+	
+	GameView.prototype.generateFrame = function () {
+	  this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight)
+	  this.checkHeldKeys();
+	  this.game.draw(this.ctx);
+	  this.game.step();
+	  this.drawNextFrame();
+	};
+	
+	GameView.prototype.checkHeldKeys = function () {
+	  //   if (key.isPressed('left')) {
+	  //     this.game.ship.power([-0.2,0]);
+	  //   } else if (key.isPressed('right')) {
+	  //     this.game.ship.power([0.2,0]);
+	  //   } else if (key.isPressed('up')) {
+	  //     this.game.ship.power([0,-0.2]);
+	  //   } else if (key.isPressed('down')) {
+	  //     this.game.ship.power([0,0.2]);
+	  //   }
+	}
+	
+	GameView.prototype.bindKeyHandlers = function () {
+	  //   key('space', function () {
+	  //     this.game.ship.fireBullet();
+	  //   }.bind(this));
+	};
+	
+	module.exports = GameView;
 
 
 /***/ }
