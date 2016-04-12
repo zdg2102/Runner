@@ -25,15 +25,15 @@ GameView.prototype.generateFrame = function () {
 };
 
 GameView.prototype.checkHeldKeys = function () {
-  //   if (key.isPressed('left')) {
-  //     this.game.ship.power([-0.2,0]);
-  //   } else if (key.isPressed('right')) {
-  //     this.game.ship.power([0.2,0]);
+    if (key.isPressed('left')) {
+      this.game.runner.vel = [-1, 0];
+    } else if (key.isPressed('right')) {
+      this.game.runner.vel = [1, 0];
   //   } else if (key.isPressed('up')) {
   //     this.game.ship.power([0,-0.2]);
   //   } else if (key.isPressed('down')) {
   //     this.game.ship.power([0,0.2]);
-  //   }
+    }
 }
 
 GameView.prototype.bindKeyHandlers = function () {
