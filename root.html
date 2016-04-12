@@ -1,25 +1,17 @@
-<canvas id="canvas" height=600 width=600></canvas>
-<script src="./keymaster.js" type="text/javascript"></script>
-<script src="./utils.js" type="text/javascript"></script>
-<script src="./movingObject.js" type="text/javascript"></script>
-<script src="./asteroid.js" type="text/javascript"></script>
-<script src="./ship.js" type="text/javascript"></script>
-<script src="./bullet.js" type="text/javascript"></script>
-<script src="./game.js" type="text/javascript"></script>
-<script src="./gameView.js" type="text/javascript"></script>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Runner</title>
 
+  <link rel="stylesheet" type="text/css" href="./root-css.scss"
+    media="screen" />
 
-<script type="text/javascript">
-  var canvas = document.getElementById("canvas")
-  var ctx = canvas.getContext("2d");
-  ctx.canvas.width = window.innerWidth - 50;
-  ctx.canvas.height = window.innerHeight - 50;
-  var img = new Image();
-  img.onload = function () {
-    ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
-  };
-  img.src = "./starsBackground.jpg";
-  var game = new Asteroids.Game(ctx.canvas.width, ctx.canvas.height);
-  var gameView = new Asteroids.GameView(game, ctx);
-  gameView.start(img);
-</script>
+</head>
+<body>
+
+  <script type="text/javascript" src="./bundle.js"></script>
+
+  <canvas id="canvas"></canvas>
+
+</body>
+</html>
