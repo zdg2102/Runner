@@ -13,7 +13,12 @@ GameView.prototype.launch = function () {
 };
 
 GameView.prototype.advanceFrame = function () {
-
+  this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight)
+  this.game.test(this.ctx);
+  // console.log("frame");
+  window.requestAnimationFrame(function () {
+    this.advanceFrame();
+  }.bind(this))
 };
 
 GameView.prototype.bindKeyHandlers = function () {

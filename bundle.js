@@ -78,11 +78,24 @@
 
 /***/ },
 /* 1 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	var RunnerGame = function (frameHeight, frameWidth) {
+	var Platform = __webpack_require__(3);
+	var Runner = __webpack_require__(4);
 	
+	var RunnerGame = function (frameHeight, frameWidth) {
+	  this.frameHeight = frameHeight;
+	  this.frameWidth = frameWidth;
+	
+	  this.testPlatform = new Platform([100, 400], 100, 800);
+	  this.testRunner = new Runner([150, 40]);
 	};
+	
+	RunnerGame.prototype.test = function (ctx) {
+	  this.testRunner.move();
+	  this.testPlatform.draw(ctx);
+	  this.testRunner.draw(ctx);
+	}
 	
 	module.exports = RunnerGame;
 
@@ -106,7 +119,12 @@
 	};
 	
 	GameView.prototype.advanceFrame = function () {
-	
+	  this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight)
+	  this.game.test(this.ctx);
+	  // console.log("frame");
+	  window.requestAnimationFrame(function () {
+	    this.advanceFrame();
+	  }.bind(this))
 	};
 	
 	GameView.prototype.bindKeyHandlers = function () {
@@ -150,6 +168,76 @@
 	  //     this.game.ship.fireBullet();
 	  //   }.bind(this));
 	  // };
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	// basic platform for running and jumping on
+	// a platform's position is defined by its top-left corner
+	
+	var Platform = function (pos, height, width) {
+	  this.pos = pos;
+	  this.height = height;
+	  this.width = width;
+	}
+	
+	Platform.prototype.draw = function (ctx) {
+	  ctx.fillStyle = "rgb(96, 88, 119)"
+	  ctx.fillRect(this.pos[0], this.pos[1], this.width, this.height)
+	}
+	
+	module.exports = Platform;
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// the player-controlled character
+	
+	var Util = __webpack_require__(5);
+	
+	var Runner = function (startingPos) {
+	  this.pos = startingPos;
+	  this.vel = [0, 0];
+	  this.height = 30;
+	  this.width = 15;
+	};
+	
+	Runner.prototype.draw = function (ctx) {
+	  ctx.fillStyle = "blue";
+	  ctx.fillRect(this.pos[0], this.pos[1], this.width, this.height)
+	}
+	
+	Runner.prototype.move = function () {
+	  this.vel = Util.gravity(this.vel);
+	  this.pos = [this.pos[0] + this.vel[0],
+	  this.pos[1] + this.vel[1]];
+	}
+	
+	module.exports = Runner;
+
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	var Util = {
+	  inherits: function (ChildClass, ParentClass) {
+	    var Surrogate = function () {};
+	    Surrogate.prototype = ParentClass.prototype;
+	    ChildClass.prototype = new Surrogate();
+	    ChildClass.prototype.constructor = ChildClass;
+	  },
+	
+	  gravity: function (vel) {
+	    return [vel[0], vel[1] + 0.3]
+	  }
+	};
+	
+	module.exports = Util;
 
 
 /***/ }
