@@ -1,5 +1,6 @@
 // main game file
 
+var GameControls = require('./gameControls');
 var Platform = require('./platform');
 var Runner = require('./runner');
 var Util = require('./util');
@@ -14,6 +15,10 @@ var RunnerGame = function (frameHeight, frameWidth) {
   this.runner = new Runner([150, 40]);
   var testPlatform = new Platform([100, 400], 100, 800);
   this.platforms.push(testPlatform);
+  // CLOSE FINDTAG
+
+  // set the jump key on the runner
+  GameControls.bindKeyHandlers(this.runner);
 };
 
 RunnerGame.prototype.allObjects = function () {
@@ -30,17 +35,19 @@ RunnerGame.prototype.draw = function (ctx) {
   })
 };
 
-RunnerGame.prototype.step = function () {
+RunnerGame.prototype.advanceFrame = function () {
+  GameControls.checkHeldKeys(this.runner);
   this.runner.move();
-  this.checkRunnerCollisions();
+  this.checkRunnerContact();
 };
 
-RunnerGame.prototype.checkRunnerCollisions = function () {
+RunnerGame.prototype.checkRunnerContact = function () {
+  // determine if the runner made contact with any
+  // environment objects
   this.environmentObjects().forEach(function (obj) {
-    var stopPos = Physics.detectContact(this.runner, obj);
-    if (stopPos) {
-      // debugger;
-      this.runner.collideWithPlatform(stopPos);
+    var contact = Physics.detectContact(this.runner, obj);
+    if (contact) {
+      this.runner.handleContact(contact);
     }
   }.bind(this))
 };

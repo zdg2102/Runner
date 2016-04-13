@@ -8,7 +8,7 @@ var Platform = function (pos, height, width) {
 }
 
 Platform.prototype.draw = function (ctx) {
-  ctx.fillStyle = "rgb(96, 88, 119)"
+  ctx.fillStyle = 'rgb(96, 88, 119)';
   ctx.fillRect(this.pos[0], this.pos[1], this.width, this.height)
 }
 

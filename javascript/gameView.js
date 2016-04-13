@@ -5,12 +5,7 @@ var GameView = function (game, ctx) {
   this.ctx = ctx;
 };
 
-GameView.prototype.launch = function () {
-  this.bindKeyHandlers();
-  this.drawNextFrame();
-};
-
-GameView.prototype.drawNextFrame = function () {
+GameView.prototype.drawFrameAndLoop = function () {
   window.requestAnimationFrame(function () {
     this.generateFrame();
   }.bind(this))
@@ -18,28 +13,9 @@ GameView.prototype.drawNextFrame = function () {
 
 GameView.prototype.generateFrame = function () {
   this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight)
-  this.checkHeldKeys();
   this.game.draw(this.ctx);
-  this.game.step();
-  this.drawNextFrame();
-};
-
-GameView.prototype.checkHeldKeys = function () {
-    if (key.isPressed('left')) {
-      this.game.runner.runAccelerate("left");
-    } else if (key.isPressed('right')) {
-      this.game.runner.runAccelerate("right");
-  //   } else if (key.isPressed('up')) {
-  //     this.game.ship.power([0,-0.2]);
-  //   } else if (key.isPressed('down')) {
-  //     this.game.ship.power([0,0.2]);
-    }
-}
-
-GameView.prototype.bindKeyHandlers = function () {
-    key('return', function () {
-      this.game.runner.jump();
-    }.bind(this));
+  this.game.advanceFrame();
+  this.drawFrameAndLoop();
 };
 
 module.exports = GameView;

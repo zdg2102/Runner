@@ -10,9 +10,9 @@ var GameControls = {
 
   checkHeldKeys: function (runner) {
     if (key.isPressed('left')) {
-      runner.runAccelerate("left");
+      runner.runAccelerate('left');
     } else if (key.isPressed('right')) {
-      runner.runAccelerate("right");
+      runner.runAccelerate('right');
     }
   }
 

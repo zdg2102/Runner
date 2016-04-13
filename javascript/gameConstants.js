@@ -10,7 +10,7 @@ var gameConstants = {
 
   jumpAccel: 4,
 
-  deAccel: 0.3,
+  friction: 2,
 
 };
 

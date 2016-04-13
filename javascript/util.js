@@ -13,6 +13,17 @@ var Util = {
     var x = vectorA[0] + vectorB[0];
     var y = vectorA[1] + vectorB[1];
     return [x, y];
+  },
+
+  isBetween: function(num, lowerBound, upperBound, inclusive) {
+    if (typeof inclusive === 'undefined') {
+      inclusive = true;
+    }
+    if (inclusive) {
+      return num >= lowerBound && num <= upperBound;
+    } else {
+      return num > lowerBound && num < upperBound;
+    }
   }
 
 };
