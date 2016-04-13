@@ -25,6 +25,12 @@ Runner.prototype.move = function () {
   // then add the constant velocity components for the next frame
   this.vel = Physics.addGravity(this.vel);
   this.vel = Physics.addFriction(this.vel);
+  // and determine the state to be in for next frame
+  this.determineState();
+};
+
+Runner.prototype.determineState = function () {
+
 };
 
 Runner.prototype.handleContact = function (contact) {
@@ -72,8 +78,9 @@ Runner.prototype.runAccelerate = function (dir) {
 };
 
 Runner.prototype.jump = function () {
-  jumpAccel = [0, -(gameConstants.jumpAccel)];
-  this.vel = Util.vectorSum(this.vel, jumpAccel);
+  // jumpAccel = [0, -(gameConstants.jumpAccel)];
+  // this.vel = Util.vectorSum(this.vel, jumpAccel);
+  this.vel = [this.vel[0], -(gameConstants.jumpAccel)];
 };
 
 module.exports = Runner;

@@ -71,18 +71,15 @@
 	var Runner = __webpack_require__(3);
 	var Util = __webpack_require__(4);
 	var Physics = __webpack_require__(6);
+	var gameConstants = __webpack_require__(7);
+	var LevelGenerator = __webpack_require__(9);
 	
 	var RunnerGame = function (frameHeight, frameWidth) {
 	  this.frameHeight = frameHeight;
 	  this.frameWidth = frameWidth;
-	  this.platforms = [];
-	
-	  // FINDTAG
-	  this.runner = new Runner([150, 40]);
-	  var testPlatform = new Platform([100, 400], 100, 800);
-	  this.platforms.push(testPlatform);
-	  // CLOSE FINDTAG
-	
+	  this.levelGenerator = new LevelGenerator(this);
+	  this.platforms = this.levelGenerator.platforms;
+	  this.runner = new Runner([150, 370]);
 	  // set the jump key on the runner
 	  GameControls.bindKeyHandlers(this.runner);
 	};
@@ -98,13 +95,22 @@
 	RunnerGame.prototype.draw = function (ctx) {
 	  this.allObjects().forEach(function (obj) {
 	    obj.draw.call(obj, ctx);
-	  })
+	  });
 	};
 	
 	RunnerGame.prototype.advanceFrame = function () {
 	  GameControls.checkHeldKeys(this.runner);
 	  this.runner.move();
 	  this.checkRunnerContact();
+	  this.scroll();
+	  this.levelGenerator.checkAndAddPlatform();
+	};
+	
+	RunnerGame.prototype.scroll = function () {
+	  var scrollMovement = [-(gameConstants.scrollSpeed), 0]
+	  this.allObjects().forEach(function (obj) {
+	    obj.pos = Util.vectorSum(obj.pos, scrollMovement);
+	  });
 	};
 	
 	RunnerGame.prototype.checkRunnerContact = function () {
@@ -173,6 +179,12 @@
 	  // then add the constant velocity components for the next frame
 	  this.vel = Physics.addGravity(this.vel);
 	  this.vel = Physics.addFriction(this.vel);
+	  // and determine the state to be in for next frame
+	  this.determineState();
+	};
+	
+	Runner.prototype.determineState = function () {
+	
 	};
 	
 	Runner.prototype.handleContact = function (contact) {
@@ -220,8 +232,9 @@
 	};
 	
 	Runner.prototype.jump = function () {
-	  jumpAccel = [0, -(gameConstants.jumpAccel)];
-	  this.vel = Util.vectorSum(this.vel, jumpAccel);
+	  // jumpAccel = [0, -(gameConstants.jumpAccel)];
+	  // this.vel = Util.vectorSum(this.vel, jumpAccel);
+	  this.vel = [this.vel[0], -(gameConstants.jumpAccel)];
 	};
 	
 	module.exports = Runner;
@@ -385,15 +398,27 @@
 	
 	var gameConstants = {
 	
-	  gravity: 0.3,
+	  gravity: 0.4,
 	
-	  maxRunVel: 4,
+	  maxRunVel: 5,
 	
 	  runAccel: 2,
 	
-	  jumpAccel: 4,
+	  jumpAccel: 10,
 	
 	  friction: 2,
+	
+	  scrollSpeed: 3,
+	
+	  platformMinHeight: 20,
+	
+	  platformAddHeight: 30,
+	
+	  platformMinWidth: 75,
+	
+	  platformAddWidth: 100,
+	
+	  jumpMaxMagnitude: 400
 	
 	};
 	
@@ -425,6 +450,131 @@
 	};
 	
 	module.exports = GameControls;
+
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// manages generation and storage of environment objects
+	
+	var gameConstants = __webpack_require__(7);
+	var Platform = __webpack_require__(2);
+	
+	var LevelGenerator = function (game) {
+	  this.game = game;
+	  this.platforms = [];
+	  this.nextVerticalPos = 0;
+	  this.nextGap = 0;
+	  this.lastPlatform = null;
+	  this.setFirstPlatform();
+	  this.setNextValues();
+	};
+	
+	LevelGenerator.prototype.randPlatformHeight = function () {
+	  return gameConstants.platformMinHeight +
+	    Math.round(gameConstants.platformAddHeight * Math.random());
+	};
+	
+	LevelGenerator.prototype.randPlatformWidth = function () {
+	  return gameConstants.platformMinWidth +
+	    Math.round(gameConstants.platformAddWidth * Math.random());
+	};
+	
+	LevelGenerator.prototype.setFirstPlatform = function () {
+	  // guarantee first platform is always in the same position
+	  var firstPlatform = new Platform([100, 400], 30, 300);
+	  // also set it as last platform so next numbers can refer
+	  // to it
+	  this.lastPlatform = firstPlatform;
+	  this.platforms.push(firstPlatform);
+	};
+	
+	LevelGenerator.prototype.lastPlatformTop = function () {
+	  if (this.lastPlatform) {
+	    return this.lastPlatform.pos[1];
+	  }
+	};
+	
+	LevelGenerator.prototype.lastPlatformEdge = function () {
+	  if (this.lastPlatform) {
+	    return this.lastPlatform.pos[0] + this.lastPlatform.width;
+	  }
+	};
+	
+	LevelGenerator.prototype.setNextValues = function () {
+	  this.nextVerticalPos = this.platformVerticalPos();
+	  this.nextGap = this.platformGap();
+	};
+	
+	LevelGenerator.prototype.platformVerticalPos = function () {
+	  // platform must be within band of 60 pixels from either
+	  // top or bottom of the screen, as well as at least 10 pixels
+	  // less than the previous platform top plus the max
+	  // jump magnitude
+	  // remember, y-offset is from the top so everything is backwards
+	  var forceBottom = this.game.frameHeight - 60;
+	  var forceTop = 60;
+	  var jumpTop = this.lastPlatformTop() -
+	    gameConstants.jumpMaxMagnitude + 10;
+	  var top = Math.max(forceTop, jumpTop);
+	  var heightBand = forceBottom - top;
+	  // debugger;
+	  return top + Math.round(heightBand * Math.random());
+	};
+	
+	LevelGenerator.prototype.platformGap = function () {
+	  // ensure that absolute distance to next platform is valid
+	  // (i.e. high platforms aren't far, far platforms aren't
+	  // high)
+	  var verticalGap = this.lastPlatformTop() - this.nextVerticalPos;
+	  // debugger;
+	  var maxGap;
+	  if (verticalGap > 0) {
+	    maxGap = Math.round(
+	      Math.sqrt(
+	        Math.pow(gameConstants.jumpMaxMagnitude, 2) -
+	        Math.pow(verticalGap, 2)
+	      )
+	    );
+	  } else {
+	    maxGap = Math.round(
+	      Math.sqrt(Math.pow(gameConstants.jumpMaxMagnitude, 2) / 2)
+	    );
+	  }
+	
+	  if (!maxGap) {
+	    maxGap = this.platformGap();
+	  }
+	
+	  return maxGap;
+	
+	
+	  // return Math.round(maxGap / 2) + Math.round((maxGap / 2) *
+	  // Math.random());
+	};
+	
+	LevelGenerator.prototype.checkAndAddPlatform = function () {
+	  // check on each frame, and when the next platform to be drawn
+	  // is about to come on the screen, generate it and pick the
+	  // next numbers
+	  if (this.lastPlatformEdge() + this.nextGap <
+	    this.game.frameWidth + 2) {
+	    var height = this.randPlatformHeight();
+	    var width = this.randPlatformWidth();
+	    var verticalPos = this.nextVerticalPos;
+	    var horizontalPos = this.game.frameWidth + 1;
+	    var newPlatform = new Platform([horizontalPos, verticalPos],
+	      height, width);
+	    // set it as last platform and select the numbers for
+	    // the next one to be generated
+	    this.lastPlatform = newPlatform;
+	    this.platforms.push(newPlatform);
+	    this.setNextValues();
+	  }
+	};
+	
+	module.exports = LevelGenerator;
 
 
 /***/ }
