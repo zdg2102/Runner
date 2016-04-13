@@ -26,9 +26,9 @@ GameView.prototype.generateFrame = function () {
 
 GameView.prototype.checkHeldKeys = function () {
     if (key.isPressed('left')) {
-      this.game.runner.vel = [-1, 0];
+      this.game.runner.runAccelerate("left");
     } else if (key.isPressed('right')) {
-      this.game.runner.vel = [1, 0];
+      this.game.runner.runAccelerate("right");
   //   } else if (key.isPressed('up')) {
   //     this.game.ship.power([0,-0.2]);
   //   } else if (key.isPressed('down')) {
@@ -37,9 +37,9 @@ GameView.prototype.checkHeldKeys = function () {
 }
 
 GameView.prototype.bindKeyHandlers = function () {
-  //   key('space', function () {
-  //     this.game.ship.fireBullet();
-  //   }.bind(this));
+    key('return', function () {
+      this.game.runner.jump();
+    }.bind(this));
 };
 
 module.exports = GameView;

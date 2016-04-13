@@ -58,70 +58,52 @@
 	  var gameView = new GameView(game, ctx);
 	  gameView.launch();
 	})
-	
-	
-	// <script type="text/javascript">
-	//   var canvas = document.getElementById("canvas")
-	//   var ctx = canvas.getContext("2d");
-	//   ctx.canvas.width = window.innerWidth - 50;
-	//   ctx.canvas.height = window.innerHeight - 50;
-	//   var img = new Image();
-	//   img.onload = function () {
-	//     ctx.drawImage(img, 0, 0, ctx.canvas.width, ctx.canvas.height);
-	//   };
-	//   img.src = "./starsBackground.jpg";
-	//   var game = new Asteroids.Game(ctx.canvas.width, ctx.canvas.height);
-	//   var gameView = new Asteroids.GameView(game, ctx);
-	//   gameView.start(img);
-	// </script>
 
 
 /***/ },
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
+	// main game file
+	
 	var Platform = __webpack_require__(2);
 	var Runner = __webpack_require__(3);
 	var Util = __webpack_require__(4);
+	var Physics = __webpack_require__(6);
 	
 	var RunnerGame = function (frameHeight, frameWidth) {
 	  this.frameHeight = frameHeight;
 	  this.frameWidth = frameWidth;
 	  this.platforms = [];
-	  this.runner = new Runner([150, 40]);
 	
+	  // FINDTAG
+	  this.runner = new Runner([150, 40]);
 	  var testPlatform = new Platform([100, 400], 100, 800);
 	  this.platforms.push(testPlatform);
 	};
 	
-	// RunnerGame.prototype.test = function (ctx) {
-	//   this.testRunner.move();
-	//   this.testPlatform.draw(ctx);
-	//   this.testRunner.draw(ctx);
-	// };
-	
 	RunnerGame.prototype.allObjects = function () {
 	  return this.platforms.concat([this.runner]);
-	}
+	};
 	
 	RunnerGame.prototype.environmentObjects = function () {
-	  return this.platforms.concat([]);
+	  return this.platforms.slice();
 	};
 	
 	RunnerGame.prototype.draw = function (ctx) {
 	  this.allObjects().forEach(function (obj) {
 	    obj.draw.call(obj, ctx);
 	  })
-	}
+	};
 	
 	RunnerGame.prototype.step = function () {
 	  this.runner.move();
 	  this.checkRunnerCollisions();
-	}
+	};
 	
 	RunnerGame.prototype.checkRunnerCollisions = function () {
 	  this.environmentObjects().forEach(function (obj) {
-	    var stopPos = Util.detectCollision(this.runner, obj);
+	    var stopPos = Physics.detectContact(this.runner, obj);
 	    if (stopPos) {
 	      // debugger;
 	      this.runner.collideWithPlatform(stopPos);
@@ -160,8 +142,10 @@
 	// the player-controlled character
 	
 	var Util = __webpack_require__(4);
+	var Physics = __webpack_require__(6);
 	
 	var Runner = function (startingPos) {
+	  this.objType = "runner";
 	  this.pos = startingPos;
 	  this.vel = [0, 0];
 	  this.height = 30;
@@ -174,15 +158,34 @@
 	};
 	
 	Runner.prototype.move = function () {
-	  this.pos = [this.pos[0] + this.vel[0],
-	  this.pos[1] + this.vel[1]];
-	  this.vel = Util.gravity(this.vel);
+	  // make the movement for this frame based on last frame's
+	  // velocity
+	  this.pos = Util.vectorSum(this.pos, this.vel);
+	  // then add gravity, since that is included in every frame
+	  this.vel = Physics.addGravity(this.vel);
+	};
+	
+	Runner.prototype.standOnPlatform = function () {
+	  this.vel = [this.vel[0], this.vel[1] - 0.3];
 	};
 	
 	Runner.prototype.collideWithPlatform = function (stopPos) {
+	  // fully stop (not realistic, but feels less slippery)
 	  this.vel = [0, 0];
 	  this.pos = stopPos;
 	};
+	
+	Runner.prototype.runAccelerate = function (dir) {
+	  if (dir === "left") {
+	    this.vel = [this.vel[0] - 1, this.vel[1]];
+	  } else if (dir === "right") {
+	    this.vel = [this.vel[0] + 1, this.vel[1]];
+	  }
+	};
+	
+	Runner.prototype.jump = function () {
+	  this.vel = [this.vel[0], this.vel[1] + 4];
+	}
 	
 	module.exports = Runner;
 
@@ -191,7 +194,10 @@
 /* 4 */
 /***/ function(module, exports) {
 
+	// general use functions
+	
 	var Util = {
+	
 	  inherits: function (ChildClass, ParentClass) {
 	    var Surrogate = function () {};
 	    Surrogate.prototype = ParentClass.prototype;
@@ -199,38 +205,12 @@
 	    ChildClass.prototype.constructor = ChildClass;
 	  },
 	
-	  gravity: function (vel) {
-	    return [vel[0], vel[1] + 0.3]
-	  },
-	
-	  detectCollision: function (obj1, obj2) {
-	    // if there is a collision, returns the point obj1 should
-	    // stop at
-	    // otherwise returns null
-	    var obj1Left = obj1.pos[0];
-	    var obj1Right = obj1.pos[0] + obj1.width;
-	    var obj1Top = obj1.pos[1];
-	    var obj1Bottom = obj1.pos[1] + obj1.height;
-	    var obj2Left = obj2.pos[0];
-	    var obj2Right = obj2.pos[0] + obj2.width;
-	    var obj2Top = obj2.pos[1];
-	    var obj2Bottom = obj2.pos[1] + obj2.height;
-	    if (obj1Bottom >= obj2Top && obj1Bottom < obj2Bottom) {
-	      // obj1 hits obj2 from above
-	      return [obj1Left, obj2Top - obj1.height]
-	    } else if (obj1Top <= obj2Bottom && obj1Top > obj2Top) {
-	      // obj1 hits obj2 from below
-	
-	    } else if (obj1Right >= obj2Left && obj1Right < obj2Right) {
-	      // obj1 hits obj2 from the left
-	
-	    } else if (obj1Left <= obj2Right && obj1Left > obj2Left) {
-	      // obj1 hits obj2 from the right
-	
-	    } else {
-	      return null;
-	    }
+	  vectorSum: function (vectorA, vectorB) {
+	    var x = vectorA[0] + vectorB[0];
+	    var y = vectorA[1] + vectorB[1];
+	    return [x, y];
 	  }
+	
 	};
 	
 	module.exports = Util;
@@ -268,9 +248,9 @@
 	
 	GameView.prototype.checkHeldKeys = function () {
 	    if (key.isPressed('left')) {
-	      this.game.runner.vel = [-1, 0];
+	      this.game.runner.runAccelerate("left");
 	    } else if (key.isPressed('right')) {
-	      this.game.runner.vel = [1, 0];
+	      this.game.runner.runAccelerate("right");
 	  //   } else if (key.isPressed('up')) {
 	  //     this.game.ship.power([0,-0.2]);
 	  //   } else if (key.isPressed('down')) {
@@ -279,12 +259,90 @@
 	}
 	
 	GameView.prototype.bindKeyHandlers = function () {
-	  //   key('space', function () {
-	  //     this.game.ship.fireBullet();
-	  //   }.bind(this));
+	    key('return', function () {
+	      this.game.runner.jump();
+	    }.bind(this));
 	};
 	
 	module.exports = GameView;
+
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// for dealing with gravity and collisions
+	
+	var gameConstants = __webpack_require__(7);
+	var Util = __webpack_require__(4);
+	
+	var Physics = {
+	
+	  addGravity: function (vel) {
+	    var gravityVector = [0, gameConstants.gravity];
+	    return Util.vectorSum(vel, gravityVector);
+	  },
+	
+	  addNormalForce: function (vel) {
+	    var normalForceVector = [0, -(gameConstants.gravity)];
+	    return Util.vectorSum(vel, normalForceVector);
+	  },
+	
+	  detectContact: function (objA, objB) {
+	    // if there is contact, returns an object containing
+	    // information on the contact
+	    // otherwise returns null
+	    var objALeft = objA.pos[0];
+	    var objARight = objA.pos[0] + objA.width;
+	    var objATop = objA.pos[1];
+	    var objABottom = objA.pos[1] + objA.height;
+	    var objBLeft = objB.pos[0];
+	    var objBRight = objB.pos[0] + objB.width;
+	    var objBTop = objB.pos[1];
+	    var objBBottom = objB.pos[1] + objB.height;
+	    if (objABottom >= objBTop && objABottom < objBBottom) {
+	      // objA hits objB from above
+	      return [objALeft, objBTop - objA.height]
+	    } else if (objATop <= objBBottom && objATop > objBTop) {
+	      // objA hits objB from below
+	
+	    } else if (objARight >= objBLeft && objARight < objBRight) {
+	      // objA hits objB from the left
+	
+	    } else if (objALeft <= objBRight && objALeft > objBLeft) {
+	      // objA hits objB from the right
+	
+	    } else {
+	      return null;
+	    }
+	  }
+	
+	};
+	
+	module.exports = Physics;
+
+
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	// all constants, to allow for easier adjustments
+	
+	var gameConstants = {
+	
+	  gravity: 0.3,
+	
+	  maxRunVel: 4,
+	
+	  runAccel: 2,
+	
+	  jumpAccel: 4,
+	
+	  deAccel: 0.3,
+	
+	};
+	
+	module.exports = gameConstants;
 
 
 /***/ }
