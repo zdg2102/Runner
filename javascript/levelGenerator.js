@@ -61,7 +61,6 @@ LevelGenerator.prototype.platformVerticalPos = function () {
     gameConstants.jumpMaxMagnitude + 10;
   var top = Math.max(forceTop, jumpTop);
   var heightBand = forceBottom - top;
-  // debugger;
   return top + Math.round(heightBand * Math.random());
 };
 
@@ -70,7 +69,6 @@ LevelGenerator.prototype.platformGap = function () {
   // (i.e. high platforms aren't far, far platforms aren't
   // high)
   var verticalGap = this.lastPlatformTop() - this.nextVerticalPos;
-  // debugger;
   var maxGap;
   if (verticalGap > 0) {
     maxGap = Math.round(
@@ -83,10 +81,6 @@ LevelGenerator.prototype.platformGap = function () {
     maxGap = Math.round(
       Math.sqrt(Math.pow(gameConstants.jumpMaxMagnitude, 2) / 2)
     );
-  }
-
-  if (!maxGap) {
-    maxGap = this.platformGap();
   }
 
   return maxGap;

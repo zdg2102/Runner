@@ -13,7 +13,7 @@ var RunnerGame = function (frameHeight, frameWidth) {
   this.frameWidth = frameWidth;
   this.levelGenerator = new LevelGenerator(this);
   this.platforms = this.levelGenerator.platforms;
-  this.runner = new Runner([150, 370]);
+  this.runner = new Runner([150, 340]);
   // set the jump key on the runner
   GameControls.bindKeyHandlers(this.runner);
 };
@@ -34,8 +34,8 @@ RunnerGame.prototype.draw = function (ctx) {
 
 RunnerGame.prototype.advanceFrame = function () {
   GameControls.checkHeldKeys(this.runner);
-  this.runner.move();
   this.checkRunnerContact();
+  this.runner.move();
   this.scroll();
   this.levelGenerator.checkAndAddPlatform();
 };

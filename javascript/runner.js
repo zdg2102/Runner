@@ -6,16 +6,29 @@ var gameConstants = require('./gameConstants');
 
 var Runner = function (startingPos) {
   this.objType = 'runner';
-  this.state = null;
+  this.state = '';
   this.pos = startingPos;
   this.vel = [0, 0];
   this.height = 30;
-  this.width = 15;
+  this.width = 12;
 };
 
 Runner.prototype.draw = function (ctx) {
-  ctx.fillStyle = 'blue';
-  ctx.fillRect(this.pos[0], this.pos[1], this.width, this.height)
+  console.log(this.state);
+  var sprite;
+  if (this.state === 'stand') {
+    sprite = window.document.getElementById('stand');
+  } else if (this.state === 'run-right') {
+    sprite = window.document.getElementById('run-right1');
+  } else if (this.state === 'run-left') {
+    sprite = window.document.getElementById('run-left1');
+  } else {
+    // default to stand
+    sprite = window.document.getElementById('stand');
+  }
+  ctx.drawImage(
+    sprite, this.pos[0], this.pos[1], this.width, this.height
+  );
 };
 
 Runner.prototype.move = function () {
@@ -30,16 +43,27 @@ Runner.prototype.move = function () {
 };
 
 Runner.prototype.determineState = function () {
-
+  // 'stand' or 'collide' at this point may have been previously
+  // set by handleContact
+  if (this.state === 'stand' && this.vel[0] > 0) {
+    this.state = 'run-right';
+  } else if (this.state === 'stand' && this.vel[0] < 0) {
+    this.state = 'run-left';
+  }
+  // console.log(this.state);
 };
 
 Runner.prototype.handleContact = function (contact) {
   // handles contact detail object passed from Physics
   if (contact.contactType === 'stand') {
     this.standOnPlatform();
+    this.state = 'stand';
   }
   if (contact.contactType === 'collision') {
     this.collideWithPlatform(contact.stopPos);
+    if (contact.fromDirection === 'above') {
+      this.state = 'land';
+    }
   }
 };
 

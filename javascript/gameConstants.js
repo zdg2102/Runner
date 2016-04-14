@@ -4,7 +4,7 @@ var gameConstants = {
 
   gravity: 0.4,
 
-  maxRunVel: 5,
+  maxRunVel: 7,
 
   runAccel: 2,
 
@@ -12,7 +12,7 @@ var gameConstants = {
 
   friction: 2,
 
-  scrollSpeed: 3,
+  scrollSpeed: 0, //6
 
   platformMinHeight: 20,
 
@@ -20,9 +20,9 @@ var gameConstants = {
 
   platformMinWidth: 75,
 
-  platformAddWidth: 100,
+  platformAddWidth: 300,
 
-  jumpMaxMagnitude: 400
+  jumpMaxMagnitude: 300
 
 };
 
