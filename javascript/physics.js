@@ -57,7 +57,7 @@ var Physics = {
         return {
           contactType: 'collision',
           fromDirection: 'above',
-          stopPos: [objALeft, objBTop - objA.height]
+          stopPos: [objALeft, objBTop - objA.fullHeight]
         };
       }
 

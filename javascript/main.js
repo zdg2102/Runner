@@ -1,7 +1,7 @@
 // loader for attaching to canvas DOM element
 
-var RunnerGame = require('./game');
-var GameView = require('./gameView');
+// var RunnerGame = require('./game');
+// var GameView = require('./gameView');
 
 window.document.addEventListener('DOMContentLoaded', function () {
   var canvas = window.document.getElementById('canvas');
