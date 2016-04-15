@@ -53,7 +53,7 @@ var Physics = {
         return {
           contactType: 'stand'
         };
-      } else {
+      } else if (objAVertVel > 0) {
         return {
           contactType: 'collision',
           fromDirection: 'above',

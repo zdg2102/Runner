@@ -48,7 +48,7 @@ RunnerGame.prototype.scroll = function () {
 };
 
 RunnerGame.prototype.checkRunnerContact = function () {
-  // determine if the runner made contact with any
+  // determine if the runner is in contact with any
   // environment objects
   this.environmentObjects().forEach(function (obj) {
     var contact = Physics.detectContact(this.runner, obj);
