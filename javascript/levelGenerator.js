@@ -25,14 +25,11 @@ LevelGenerator.prototype.randPlatformWidth = function () {
 
 LevelGenerator.prototype.setFirstPlatform = function () {
   // guarantee first platform is always in the same position
-  var firstPlatform = new Platform([100, 400], 30, 150);
+  var firstPlatform = new Platform([300, 400], 30, 300);
   // also set it as last platform so next numbers can refer
   // to it
   this.lastPlatform = firstPlatform;
   this.platforms.push(firstPlatform);
-
-  var test = new Platform([500, 300], 300, 150);
-  this.platforms.push(test);
 };
 
 LevelGenerator.prototype.lastPlatformTop = function () {
@@ -111,6 +108,17 @@ LevelGenerator.prototype.checkAndAddPlatform = function () {
     this.platforms.push(newPlatform);
     this.setNextValues();
   }
+};
+
+LevelGenerator.prototype.checkAndClearOffscreenPlatform = function () {
+  // see if a platform has cleared the screen and delete it
+  for (var i = 0; i < this.platforms.length; i++) {
+    if (this.platforms[i].pos[0] + this.platforms[i].width < 0) {
+      this.platforms.splice(i, 1);
+      return;
+    }
+  }
+
 };
 
 module.exports = LevelGenerator;

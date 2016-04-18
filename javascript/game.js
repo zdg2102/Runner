@@ -13,9 +13,10 @@ var RunnerGame = function (frameHeight, frameWidth) {
   this.frameWidth = frameWidth;
   this.levelGenerator = new LevelGenerator(this);
   this.platforms = this.levelGenerator.platforms;
-  this.runner = new Runner([150, 340]);
+  this.runner = new Runner([320, 350]);
   this.isPaused = false;
-  // set the jump key on the runner
+  this.isInIntro = true;
+  this.isRunnerDead = false;
   GameControls.bindKeyHandlers(this, this.runner);
 };
 
@@ -31,19 +32,82 @@ RunnerGame.prototype.draw = function (ctx) {
   this.allObjects().forEach(function (obj) {
     obj.draw.call(obj, ctx);
   });
+  // draw pause overlay if game is paused
+  if (this.isPaused) {
+    this.displayPause(ctx);
+  }
+  if (this.isInIntro) {
+    this.displayTitleScreen(ctx);
+  }
+  if (this.isRunnerDead) {
+    this.displayDeath(ctx);
+  }
+};
+
+RunnerGame.prototype.closeInfoScreen = function () {
+  if (!this.isRunnerDead) {
+    // in this case we're closing the intro screen
+    this.isInIntro = false;
+  } else {
+    // otherwise we're resetting the game
+    this.isRunnerDead = false;
+    this.isInIntro = true;
+    this.runner.pos = [320, 350];
+    this.runner.vel = [0, 0];
+    this.runner.width = 20;
+    this.runner.height = 50;
+    this.runner.frameState = 'stand-right';
+    this.runner.runnerAnimator.spriteFrame = 1;
+    this.levelGenerator = new LevelGenerator(this);
+    this.platforms = this.levelGenerator.platforms;
+  }
 };
 
 RunnerGame.prototype.togglePause = function () {
   this.isPaused = !this.isPaused;
 };
 
+RunnerGame.prototype.displayPause = function (ctx) {
+  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
+  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+  ctx.fillStyle = 'rgb(255, 255, 255)';
+  ctx.font = "36px sans-serif";
+  ctx.fillText("PAUSED", 50, 75);
+};
+
+RunnerGame.prototype.displayTitleScreen = function (ctx) {
+  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
+  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+  ctx.fillStyle = 'rgb(255, 255, 255)';
+  ctx.font = '130px sans-serif';
+  ctx.fillText("RUNNER", 50, 180);
+  ctx.font = '24px sans-serif';
+  ctx.fillText("LEFT and RIGHT to run", 50, 300);
+  ctx.fillText("UP to jump", 50, 350);
+  ctx.fillText("UP again to double jump", 50, 400);
+  ctx.fillText("P to pause", 50, 450);
+  ctx.font = '40px sans-serif';
+  ctx.fillText("Press Enter to play", 340, 550);
+};
+
+RunnerGame.prototype.displayDeath = function (ctx) {
+  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
+  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+  ctx.fillStyle = 'rgb(255, 255, 255)';
+  ctx.font = '40px sans-serif';
+  ctx.fillText("You died", 420, 200);
+  ctx.fillText("Press Enter to restart", 300, 550);
+};
+
 RunnerGame.prototype.advanceFrame = function () {
-  if (!this.isPaused) {
+  if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
     GameControls.checkHeldKeys(this.runner);
+    this.checkRunnerDeath();
     this.checkRunnerContact();
     this.runner.move();
     this.scroll();
     this.levelGenerator.checkAndAddPlatform();
+    this.levelGenerator.checkAndClearOffscreenPlatform();
   }
 };
 
@@ -63,6 +127,16 @@ RunnerGame.prototype.checkRunnerContact = function () {
       this.runner.handleContact(contact);
     }
   }.bind(this));
+};
+
+RunnerGame.prototype.checkRunnerDeath = function () {
+  // determine if the runner died
+  // going off the top of the screen won't kill you
+  if (this.runner.pos[0] > this.frameWidth ||
+    this.runner.pos[0] + this.runner.width < 0 ||
+    this.runner.pos[1] > this.frameHeight) {
+    this.isRunnerDead = true;
+  }
 };
 
 module.exports = RunnerGame;

@@ -9,6 +9,9 @@ var GameControls = {
     key('p', function () {
       game.togglePause();
     });
+    key('return', function () {
+      game.closeInfoScreen();
+    });
   },
 
   checkHeldKeys: function (runner) {

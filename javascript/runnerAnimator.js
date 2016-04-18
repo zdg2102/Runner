@@ -44,13 +44,13 @@ RunnerAnimator.prototype.setSprite = function (newState) {
   if (newState === this.runner.prevFrameState) {
     if (this.spriteFrame + 1 < this.spriteFrameCount[newState] *
       gameConstants.framesPerSprite) {
-        this.spriteFrame = this.spriteFrame + 1;
-      } else {
-        this.spriteFrame = 1;
-      }
+      this.spriteFrame = this.spriteFrame + 1;
     } else {
       this.spriteFrame = 1;
     }
+  } else {
+    this.spriteFrame = 1;
+  }
 };
 
 module.exports = RunnerAnimator;

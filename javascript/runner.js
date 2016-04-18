@@ -62,8 +62,6 @@ Runner.prototype.determineState = function () {
     newState = 'stand-right';
   }
 
-  // console.log(newState);
-
   // uses state to set sprite
   this.runnerAnimator.setSprite(newState);
 

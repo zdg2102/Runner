@@ -14,7 +14,7 @@ var gameConstants = {
 
   friction: 2,
 
-  scrollSpeed: 0, // 6
+  scrollSpeed: 6,
 
   platformMinHeight: 20,
 
@@ -24,9 +24,9 @@ var gameConstants = {
 
   platformAddWidth: 300,
 
-  jumpMaxMagnitude: 300,
+  jumpMaxMagnitude: 250,
 
-  numJumps: 10000 // 2
+  numJumps: 2
 
 };
 
