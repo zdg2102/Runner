@@ -14,8 +14,9 @@ var RunnerGame = function (frameHeight, frameWidth) {
   this.levelGenerator = new LevelGenerator(this);
   this.platforms = this.levelGenerator.platforms;
   this.runner = new Runner([150, 340]);
+  this.isPaused = false;
   // set the jump key on the runner
-  GameControls.bindKeyHandlers(this.runner);
+  GameControls.bindKeyHandlers(this, this.runner);
 };
 
 RunnerGame.prototype.allObjects = function () {
@@ -32,16 +33,22 @@ RunnerGame.prototype.draw = function (ctx) {
   });
 };
 
+RunnerGame.prototype.togglePause = function () {
+  this.isPaused = !this.isPaused;
+};
+
 RunnerGame.prototype.advanceFrame = function () {
-  GameControls.checkHeldKeys(this.runner);
-  this.checkRunnerContact();
-  this.runner.move();
-  this.scroll();
-  this.levelGenerator.checkAndAddPlatform();
+  if (!this.isPaused) {
+    GameControls.checkHeldKeys(this.runner);
+    this.checkRunnerContact();
+    this.runner.move();
+    this.scroll();
+    this.levelGenerator.checkAndAddPlatform();
+  }
 };
 
 RunnerGame.prototype.scroll = function () {
-  var scrollMovement = [-(gameConstants.scrollSpeed), 0]
+  var scrollMovement = [-(gameConstants.scrollSpeed), 0];
   this.allObjects().forEach(function (obj) {
     obj.pos = Util.vectorSum(obj.pos, scrollMovement);
   });
@@ -55,7 +62,7 @@ RunnerGame.prototype.checkRunnerContact = function () {
     if (contact) {
       this.runner.handleContact(contact);
     }
-  }.bind(this))
+  }.bind(this));
 };
 
 module.exports = RunnerGame;

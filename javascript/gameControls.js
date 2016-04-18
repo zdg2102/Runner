@@ -2,9 +2,12 @@
 
 var GameControls = {
 
-  bindKeyHandlers: function (runner) {
+  bindKeyHandlers: function (game, runner) {
     key('up', function () {
       runner.jump();
+    });
+    key('p', function () {
+      game.togglePause();
     });
   },
 

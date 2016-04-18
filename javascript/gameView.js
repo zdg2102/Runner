@@ -8,11 +8,11 @@ var GameView = function (game, ctx) {
 GameView.prototype.drawFrameAndLoop = function () {
   window.requestAnimationFrame(function () {
     this.generateFrame();
-  }.bind(this))
-}
+  }.bind(this));
+};
 
 GameView.prototype.generateFrame = function () {
-  this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight)
+  this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight);
   this.game.draw(this.ctx);
   this.game.advanceFrame();
   this.drawFrameAndLoop();

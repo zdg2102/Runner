@@ -1,4 +1,4 @@
-// for dealing with gravity and collisions
+// for dealing with gravity, friction, collisions, and contact
 
 var gameConstants = require('./gameConstants');
 var Util = require('./util');
@@ -37,11 +37,14 @@ var Physics = {
     var objARight = objA.pos[0] + objA.width;
     var objATop = objA.pos[1];
     var objABottom = objA.pos[1] + objA.height;
+    var objAHorizVel = objA.vel[0];
     var objAVertVel = objA.vel[1];
     var objBLeft = objB.pos[0];
     var objBRight = objB.pos[0] + objB.width;
     var objBTop = objB.pos[1];
     var objBBottom = objB.pos[1] + objB.height;
+
+
 
     if (Util.isBetween(objABottom, objBTop, objBBottom) &&
       (Util.isBetween(objARight, objBLeft, objBRight) ||
@@ -54,21 +57,50 @@ var Physics = {
           contactType: 'stand'
         };
       } else if (objAVertVel > 0) {
+        // need to account for the runner having two height
+        // values
+        var height = objA.collideHeight || objA.height;
         return {
           contactType: 'collision',
           fromDirection: 'above',
-          stopPos: [objALeft, objBTop - objA.fullHeight]
+          stopPos: [objALeft, objBTop - height]
         };
       }
 
-    } else if (objATop <= objBBottom && objATop > objBTop) {
-      // objA hits objB from below
+    } else if (Util.isBetween(objATop, objBTop, objBBottom) &&
+      (Util.isBetween(objARight, objBLeft, objBRight) ||
+      Util.isBetween(objALeft, objBLeft, objBRight)) &&
+      objAVertVel < 0) {
+      return {
+        contactType: 'collision',
+        fromDirection: 'below',
+        stopPos: [objALeft, objBBottom]
+      };
 
-    } else if (objARight >= objBLeft && objARight < objBRight) {
+    } else if (Util.isBetween(objARight, objBLeft, objBRight) &&
+      (Util.isBetween(objATop, objBTop, objBBottom) ||
+      Util.isBetween(objABottom, objBTop, objBBottom)) &&
+      objAHorizVel > 0) {
       // objA hits objB from the left
+      // need to account for the runner having two width
+      // values
+      var width = objA.collideWidth || objA.width;
+      return {
+        contactType: 'collision',
+        fromDirection: 'left',
+        stopPos: [objBLeft - width, objATop]
+      };
 
-    } else if (objALeft <= objBRight && objALeft > objBLeft) {
+    } else if (Util.isBetween(objALeft, objBLeft, objBRight) &&
+      (Util.isBetween(objATop, objBTop, objBBottom) ||
+      Util.isBetween(objABottom, objBTop, objBBottom)) &&
+      objAHorizVel < 0) {
       // objA hits objB from the right
+      return {
+        contactType: 'collision',
+        fromDirection: 'right',
+        stopPos: [objBRight, objATop]
+      };
 
     } else {
       return null;

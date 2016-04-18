@@ -30,6 +30,9 @@ LevelGenerator.prototype.setFirstPlatform = function () {
   // to it
   this.lastPlatform = firstPlatform;
   this.platforms.push(firstPlatform);
+
+  var test = new Platform([500, 300], 300, 150);
+  this.platforms.push(test);
 };
 
 LevelGenerator.prototype.lastPlatformTop = function () {
