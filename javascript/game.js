@@ -17,6 +17,7 @@ var RunnerGame = function (frameHeight, frameWidth) {
   this.backgroundGenerator = new BackgroundGenerator(this);
   this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
   this.runner = new Runner([320, 350]);
+  this.runnerDistance = 0;
   this.isPaused = false;
   this.isInIntro = true;
   this.isRunnerDead = false;
@@ -39,9 +40,14 @@ RunnerGame.prototype.environmentObjects = function () {
 };
 
 RunnerGame.prototype.draw = function (ctx) {
+  ctx.fillStyle = 'rgb(135, 206, 250)';
+  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
   this.allObjects().forEach(function (obj) {
     obj.draw.call(obj, ctx);
   });
+  if (!this.isInIntro) {
+    this.displayScore(ctx);
+  }
   // draw pause overlay if game is paused
   if (this.isPaused) {
     this.displayPause(ctx);
@@ -52,6 +58,13 @@ RunnerGame.prototype.draw = function (ctx) {
   if (this.isRunnerDead) {
     this.displayDeath(ctx);
   }
+};
+
+RunnerGame.prototype.displayScore = function (ctx) {
+  ctx.fillStyle = 'rgb(0, 0, 0)';
+  ctx.font = "36px sans-serif";
+  var displayDistance = Math.floor(this.runnerDistance / 100);
+  ctx.fillText(displayDistance + " m", 900, 60);
 };
 
 RunnerGame.prototype.closeInfoScreen = function () {
@@ -136,6 +149,7 @@ RunnerGame.prototype.scroll = function () {
   this.backgroundObjects.forEach(function (obj) {
     obj.pos = Util.vectorSum(obj.pos, parallaxScrollMovement);
   });
+  this.runnerDistance += gameConstants.scrollSpeed;
 };
 
 RunnerGame.prototype.checkRunnerContact = function () {
