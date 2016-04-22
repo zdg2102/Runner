@@ -7,12 +7,15 @@ var Util = require('./util');
 var Physics = require('./physics');
 var gameConstants = require('./gameConstants');
 var LevelGenerator = require('./levelGenerator');
+var BackgroundGenerator = require('./backgroundGenerator');
 
 var RunnerGame = function (frameHeight, frameWidth) {
   this.frameHeight = frameHeight;
   this.frameWidth = frameWidth;
   this.levelGenerator = new LevelGenerator(this);
   this.platforms = this.levelGenerator.platforms;
+  this.backgroundGenerator = new BackgroundGenerator(this);
+  this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
   this.runner = new Runner([320, 350]);
   this.isPaused = false;
   this.isInIntro = true;
@@ -21,6 +24,13 @@ var RunnerGame = function (frameHeight, frameWidth) {
 };
 
 RunnerGame.prototype.allObjects = function () {
+  // background objects are added first so everything
+  // else is drawn on top of them
+  return this.backgroundObjects.concat(this.platforms)
+    .concat([this.runner]);
+};
+
+RunnerGame.prototype.foregroundObjects = function () {
   return this.platforms.concat([this.runner]);
 };
 
@@ -60,6 +70,8 @@ RunnerGame.prototype.closeInfoScreen = function () {
     this.runner.runnerAnimator.spriteFrame = 1;
     this.levelGenerator = new LevelGenerator(this);
     this.platforms = this.levelGenerator.platforms;
+    this.backgroundGenerator = new BackgroundGenerator(this);
+    this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
   }
 };
 
@@ -107,14 +119,22 @@ RunnerGame.prototype.advanceFrame = function () {
     this.runner.move();
     this.scroll();
     this.levelGenerator.checkAndAddPlatform();
+    this.backgroundGenerator.checkAndAddBuilding();
     this.levelGenerator.checkAndClearOffscreenPlatform();
   }
 };
 
 RunnerGame.prototype.scroll = function () {
   var scrollMovement = [-(gameConstants.scrollSpeed), 0];
-  this.allObjects().forEach(function (obj) {
+  var parallaxScrollMovement = [
+    -(gameConstants.scrollSpeed * gameConstants.parallaxFactor),
+    0
+  ];
+  this.foregroundObjects().forEach(function (obj) {
     obj.pos = Util.vectorSum(obj.pos, scrollMovement);
+  });
+  this.backgroundObjects.forEach(function (obj) {
+    obj.pos = Util.vectorSum(obj.pos, parallaxScrollMovement);
   });
 };
 

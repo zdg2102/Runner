@@ -16,6 +16,8 @@ var gameConstants = {
 
   scrollSpeed: 6,
 
+  parallaxFactor: 0.3,
+
   platformMinHeight: 20,
 
   platformAddHeight: 30,
@@ -23,6 +25,12 @@ var gameConstants = {
   platformMinWidth: 75,
 
   platformAddWidth: 300,
+
+  platformOutlineThickness: 5,
+
+  buildingMinWidth: 150,
+
+  buildingAddWidth: 50,
 
   jumpMaxMagnitude: 250,
 

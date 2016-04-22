@@ -47,7 +47,7 @@
 	// loader for attaching to canvas DOM element
 	
 	var RunnerGame = __webpack_require__(1);
-	var GameView = __webpack_require__(9);
+	var GameView = __webpack_require__(10);
 	
 	window.document.addEventListener('DOMContentLoaded', function () {
 	  var canvas = window.document.getElementById('canvas');
@@ -72,13 +72,16 @@
 	var Util = __webpack_require__(5);
 	var Physics = __webpack_require__(6);
 	var gameConstants = __webpack_require__(7);
-	var LevelGenerator = __webpack_require__(8);
+	var LevelGenerator = __webpack_require__(9);
+	var BackgroundGenerator = __webpack_require__(11);
 	
 	var RunnerGame = function (frameHeight, frameWidth) {
 	  this.frameHeight = frameHeight;
 	  this.frameWidth = frameWidth;
 	  this.levelGenerator = new LevelGenerator(this);
 	  this.platforms = this.levelGenerator.platforms;
+	  this.backgroundGenerator = new BackgroundGenerator(this);
+	  this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
 	  this.runner = new Runner([320, 350]);
 	  this.isPaused = false;
 	  this.isInIntro = true;
@@ -87,6 +90,13 @@
 	};
 	
 	RunnerGame.prototype.allObjects = function () {
+	  // background objects are added first so everything
+	  // else is drawn on top of them
+	  return this.backgroundObjects.concat(this.platforms)
+	    .concat([this.runner]);
+	};
+	
+	RunnerGame.prototype.foregroundObjects = function () {
 	  return this.platforms.concat([this.runner]);
 	};
 	
@@ -126,6 +136,8 @@
 	    this.runner.runnerAnimator.spriteFrame = 1;
 	    this.levelGenerator = new LevelGenerator(this);
 	    this.platforms = this.levelGenerator.platforms;
+	    this.backgroundGenerator = new BackgroundGenerator(this);
+	    this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
 	  }
 	};
 	
@@ -173,14 +185,22 @@
 	    this.runner.move();
 	    this.scroll();
 	    this.levelGenerator.checkAndAddPlatform();
+	    this.backgroundGenerator.checkAndAddBuilding();
 	    this.levelGenerator.checkAndClearOffscreenPlatform();
 	  }
 	};
 	
 	RunnerGame.prototype.scroll = function () {
 	  var scrollMovement = [-(gameConstants.scrollSpeed), 0];
-	  this.allObjects().forEach(function (obj) {
+	  var parallaxScrollMovement = [
+	    -(gameConstants.scrollSpeed * gameConstants.parallaxFactor),
+	    0
+	  ];
+	  this.foregroundObjects().forEach(function (obj) {
 	    obj.pos = Util.vectorSum(obj.pos, scrollMovement);
+	  });
+	  this.backgroundObjects.forEach(function (obj) {
+	    obj.pos = Util.vectorSum(obj.pos, parallaxScrollMovement);
 	  });
 	};
 	
@@ -243,10 +263,11 @@
 
 /***/ },
 /* 3 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	// basic platform for running and jumping on
-	// a platform's position is defined by its top-left corner
+	
+	var gameConstants = __webpack_require__(7);
 	
 	var Platform = function (pos, height, width) {
 	  this.pos = pos;
@@ -257,6 +278,15 @@
 	Platform.prototype.draw = function (ctx) {
 	  ctx.fillStyle = 'rgb(96, 88, 119)';
 	  ctx.fillRect(this.pos[0], this.pos[1], this.width, this.height);
+	  ctx.beginPath();
+	  ctx.strokeStyle = 'rgb(0, 0, 0)';
+	  ctx.lineWidth = gameConstants.platformOutlineThickness;
+	  ctx.strokeRect(
+	    this.pos[0],
+	    this.pos[1] + gameConstants.platformOutlineThickness / 2,
+	    this.width,
+	    this.height - gameConstants.platformOutlineThickness / 2
+	  );
 	};
 	
 	module.exports = Platform;
@@ -271,7 +301,7 @@
 	var Util = __webpack_require__(5);
 	var Physics = __webpack_require__(6);
 	var gameConstants = __webpack_require__(7);
-	var RunnerAnimator = __webpack_require__(10);
+	var RunnerAnimator = __webpack_require__(8);
 	
 	var Runner = function (startingPos) {
 	  this.pos = startingPos;
@@ -593,6 +623,8 @@
 	
 	  scrollSpeed: 6,
 	
+	  parallaxFactor: 0.3,
+	
 	  platformMinHeight: 20,
 	
 	  platformAddHeight: 30,
@@ -600,6 +632,12 @@
 	  platformMinWidth: 75,
 	
 	  platformAddWidth: 300,
+	
+	  platformOutlineThickness: 5,
+	
+	  buildingMinWidth: 150,
+	
+	  buildingAddWidth: 50,
 	
 	  jumpMaxMagnitude: 250,
 	
@@ -612,6 +650,68 @@
 
 /***/ },
 /* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// controls animation of runner sprite
+	
+	var gameConstants = __webpack_require__(7);
+	
+	var RunnerAnimator = function (runner) {
+	  this.runner = runner;
+	  this.spriteAssets = {};
+	  this.spriteFrame = 1;
+	  this.spriteFrameCount = {
+	    'stand-right': 1,
+	    'stand-left': 1,
+	    'run-right': 6,
+	    'run-left': 6,
+	    'flip-right': 6,
+	    'flip-left': 6
+	  };
+	  this.loadSpriteAssets();
+	};
+	
+	RunnerAnimator.prototype.loadSpriteAssets = function () {
+	  var spriteIds = ['stand-right1', 'stand-left1', 'run-right1',
+	    'run-right2', 'run-right3', 'run-right4', 'run-right5',
+	    'run-right6', 'run-left1', 'run-left2', 'run-left3',
+	    'run-left4', 'run-left5', 'run-left6', 'flip-right1', 'flip-right2',
+	    'flip-right3', 'flip-right4', 'flip-right5', 'flip-right6',
+	    'flip-left1', 'flip-left2', 'flip-left3', 'flip-left4',
+	    'flip-left5', 'flip-left6'];
+	  spriteIds.forEach(function (id) {
+	    this.spriteAssets[id] = window.document.getElementById(id);
+	  }.bind(this));
+	};
+	
+	RunnerAnimator.prototype.draw = function (ctx) {
+	  var id = this.runner.frameState + (Math.floor(this.spriteFrame /
+	    gameConstants.framesPerSprite) + 1);
+	  var sprite = this.spriteAssets[id];
+	  ctx.drawImage(
+	    sprite, this.runner.pos[0], this.runner.pos[1], this.runner.width,
+	      this.runner.height
+	  );
+	};
+	
+	RunnerAnimator.prototype.setSprite = function (newState) {
+	  if (newState === this.runner.prevFrameState) {
+	    if (this.spriteFrame + 1 < this.spriteFrameCount[newState] *
+	      gameConstants.framesPerSprite) {
+	      this.spriteFrame = this.spriteFrame + 1;
+	    } else {
+	      this.spriteFrame = 1;
+	    }
+	  } else {
+	    this.spriteFrame = 1;
+	  }
+	};
+	
+	module.exports = RunnerAnimator;
+
+
+/***/ },
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// manages generation and storage of environment objects
@@ -741,7 +841,7 @@
 
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports) {
 
 	// handles game's interaction wtih canvas element
@@ -768,65 +868,96 @@
 
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// controls animation of runner sprite
+	// for filling the background
 	
+	var Building = __webpack_require__(12);
 	var gameConstants = __webpack_require__(7);
 	
-	var RunnerAnimator = function (runner) {
-	  this.runner = runner;
-	  this.spriteAssets = {};
-	  this.spriteFrame = 1;
-	  this.spriteFrameCount = {
-	    'stand-right': 1,
-	    'stand-left': 1,
-	    'run-right': 6,
-	    'run-left': 6,
-	    'flip-right': 6,
-	    'flip-left': 6
-	  };
-	  this.loadSpriteAssets();
+	var BackgroundGenerator = function (game) {
+	  this.game = game;
+	  this.backgroundObjects = [];
+	  this.lastObject = null;
+	  this.buildingHeight = this.game.frameHeight;
+	  this.populateInitialScreen();
 	};
 	
-	RunnerAnimator.prototype.loadSpriteAssets = function () {
-	  var spriteIds = ['stand-right1', 'stand-left1', 'run-right1',
-	    'run-right2', 'run-right3', 'run-right4', 'run-right5',
-	    'run-right6', 'run-left1', 'run-left2', 'run-left3',
-	    'run-left4', 'run-left5', 'run-left6', 'flip-right1', 'flip-right2',
-	    'flip-right3', 'flip-right4', 'flip-right5', 'flip-right6',
-	    'flip-left1', 'flip-left2', 'flip-left3', 'flip-left4',
-	    'flip-left5', 'flip-left6'];
-	  spriteIds.forEach(function (id) {
-	    this.spriteAssets[id] = window.document.getElementById(id);
-	  }.bind(this));
+	BackgroundGenerator.prototype.populateInitialScreen = function () {
+	  var width = Math.floor(gameConstants.buildingMinWidth +
+	    Math.random() * gameConstants.buildingAddWidth);
+	  var left = -(width / 3);
+	  var building;
+	  while (left < this.game.frameWidth) {
+	    var top = Math.random() * (this.game.frameHeight * 0.7);
+	    building = new Building([left, top],
+	      width, this.buildingHeight);
+	      this.backgroundObjects.push(building);
+	    this.backgroundObjects.push(building);
+	    left += width;
+	  }
+	  this.lastObject = building;
 	};
 	
-	RunnerAnimator.prototype.draw = function (ctx) {
-	  var id = this.runner.frameState + (Math.floor(this.spriteFrame /
-	    gameConstants.framesPerSprite) + 1);
-	  var sprite = this.spriteAssets[id];
-	  ctx.drawImage(
-	    sprite, this.runner.pos[0], this.runner.pos[1], this.runner.width,
-	      this.runner.height
-	  );
-	};
-	
-	RunnerAnimator.prototype.setSprite = function (newState) {
-	  if (newState === this.runner.prevFrameState) {
-	    if (this.spriteFrame + 1 < this.spriteFrameCount[newState] *
-	      gameConstants.framesPerSprite) {
-	      this.spriteFrame = this.spriteFrame + 1;
-	    } else {
-	      this.spriteFrame = 1;
-	    }
-	  } else {
-	    this.spriteFrame = 1;
+	BackgroundGenerator.prototype.checkAndAddBuilding = function () {
+	  if (this.lastObject.pos[0] + this.lastObject.width <
+	    this.game.frameWidth + 2) {
+	    var width = Math.floor(gameConstants.buildingMinWidth +
+	      Math.random() * gameConstants.buildingAddWidth);
+	    var left = this.lastObject.pos[0] + this.lastObject.width;
+	    var top = Math.random() * (this.game.frameHeight / 3);
+	    var building = new Building([left, top],
+	      width, this.buildingHeight);
+	      this.backgroundObjects.push(building);
+	    this.backgroundObjects.push(building);
+	    this.lastObject = building;
 	  }
 	};
 	
-	module.exports = RunnerAnimator;
+	module.exports = BackgroundGenerator;
+
+
+/***/ },
+/* 12 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// building outline for background fill
+	
+	var gameConstants = __webpack_require__(7);
+	
+	var Building = function (pos, width, height) {
+	  this.pos = pos;
+	  this.height = height;
+	  this.width = width;
+	  this.r = 0;
+	  this.g = 0;
+	  this.b = 0;
+	  this.setColor();
+	};
+	
+	Building.prototype.setColor = function () {
+	  // every fifth building or so make a gap
+	  if (Math.random() < 0.2) {
+	    this.r = null;
+	    this.g = null;
+	    this.b = null;
+	  } else {
+	    this.r = Math.floor(200 + Math.random() * 20);
+	    this.g = Math.floor(200 + Math.random() * 20);
+	    this.b = Math.floor(200 + Math.random() * 20);
+	  }
+	};
+	
+	Building.prototype.draw = function (ctx) {
+	  // draw nothing if the color values are null
+	  if (this.r && this.g && this.b) {
+	    ctx.fillStyle = 'rgb(' + this.r + ',' + this.g + ',' + this.b + ')';
+	    ctx.fillRect(this.pos[0], this.pos[1], this.width, this.height);
+	  }
+	};
+	
+	module.exports = Building;
 
 
 /***/ }
