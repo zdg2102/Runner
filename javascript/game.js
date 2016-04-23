@@ -45,19 +45,19 @@ RunnerGame.prototype.draw = function (ctx) {
   this.allObjects().forEach(function (obj) {
     obj.draw.call(obj, ctx);
   });
-  if (!this.isInIntro) {
-    this.displayScore(ctx);
-  }
-  // draw pause overlay if game is paused
-  if (this.isPaused) {
-    this.displayPause(ctx);
-  }
-  if (this.isInIntro) {
-    this.displayTitleScreen(ctx);
-  }
-  if (this.isRunnerDead) {
-    this.displayDeath(ctx);
-  }
+  // if (!this.isInIntro) {
+  //   this.displayScore(ctx);
+  // }
+  // // draw pause overlay if game is paused
+  // if (this.isPaused) {
+  //   this.displayPause(ctx);
+  // }
+  // if (this.isInIntro) {
+  //   this.displayTitleScreen(ctx);
+  // }
+  // if (this.isRunnerDead) {
+  //   this.displayDeath(ctx);
+  // }
 };
 
 RunnerGame.prototype.displayScore = function (ctx) {
@@ -126,7 +126,7 @@ RunnerGame.prototype.displayDeath = function (ctx) {
 };
 
 RunnerGame.prototype.advanceFrame = function () {
-  if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
+  // if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
     GameControls.checkHeldKeys(this.runner);
     this.checkRunnerDeath();
     this.checkRunnerContact();
@@ -136,7 +136,7 @@ RunnerGame.prototype.advanceFrame = function () {
     this.backgroundGenerator.checkAndAddBuilding();
     this.levelGenerator.checkAndClearOffscreenPlatform();
     this.backgroundGenerator.checkAndClearOffscreenBuilding();
-  }
+  // }
 };
 
 RunnerGame.prototype.scroll = function () {

@@ -25,11 +25,15 @@ LevelGenerator.prototype.randPlatformWidth = function () {
 
 LevelGenerator.prototype.setFirstPlatform = function () {
   // guarantee first platform is always in the same position
-  var firstPlatform = new Platform([300, 400], 30, 300);
+  // var firstPlatform = new Platform([300, 400], 30, 300);
+  var firstPlatform = new Platform([100, 600], 30, 300);
   // also set it as last platform so next numbers can refer
   // to it
   this.lastPlatform = firstPlatform;
   this.platforms.push(firstPlatform);
+
+  var testBrick = new Platform([500, 400], 150, 150);
+  this.platforms.push(testBrick);
 };
 
 LevelGenerator.prototype.lastPlatformTop = function () {

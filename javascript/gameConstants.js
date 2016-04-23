@@ -14,7 +14,7 @@ var gameConstants = {
 
   friction: 2,
 
-  scrollSpeed: 8,
+  scrollSpeed: 0, // 8
 
   parallaxFactor: 0.3,
 
