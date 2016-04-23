@@ -20,9 +20,10 @@ BackgroundGenerator.prototype.populateInitialScreen = function () {
     var top = Math.random() * (this.game.frameHeight * 0.7);
     building = new Building([left, top],
       width, this.buildingHeight);
-      this.backgroundObjects.push(building);
     this.backgroundObjects.push(building);
     left += width;
+    width = Math.floor(gameConstants.buildingMinWidth +
+      Math.random() * gameConstants.buildingAddWidth);
   }
   this.lastObject = building;
 };
@@ -36,10 +37,22 @@ BackgroundGenerator.prototype.checkAndAddBuilding = function () {
     var top = Math.random() * (this.game.frameHeight / 3);
     var building = new Building([left, top],
       width, this.buildingHeight);
-      this.backgroundObjects.push(building);
     this.backgroundObjects.push(building);
     this.lastObject = building;
   }
+};
+
+BackgroundGenerator.prototype.checkAndClearOffscreenBuilding =
+  function () {
+  // see if a building has cleared the screen and delete it
+  for (var i = 0; i < this.backgroundObjects.length; i++) {
+    if (this.backgroundObjects[i].pos[0] +
+      this.backgroundObjects[i].width < 0) {
+      this.backgroundObjects.splice(i, 1);
+      return;
+    }
+  }
+
 };
 
 module.exports = BackgroundGenerator;

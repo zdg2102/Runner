@@ -40,7 +40,7 @@ RunnerGame.prototype.environmentObjects = function () {
 };
 
 RunnerGame.prototype.draw = function (ctx) {
-  ctx.fillStyle = 'rgb(135, 206, 250)';
+  ctx.fillStyle = 'rgb(159, 182, 205)';
   ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
   this.allObjects().forEach(function (obj) {
     obj.draw.call(obj, ctx);
@@ -134,6 +134,7 @@ RunnerGame.prototype.advanceFrame = function () {
     this.levelGenerator.checkAndAddPlatform();
     this.backgroundGenerator.checkAndAddBuilding();
     this.levelGenerator.checkAndClearOffscreenPlatform();
+    this.backgroundGenerator.checkAndClearOffscreenBuilding();
   }
 };
 
