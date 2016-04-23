@@ -34,7 +34,7 @@ var gameConstants = {
 
   jumpMaxMagnitude: 250,
 
-  numJumps: 2
+  numJumps: 10000 //2
 
 };
 

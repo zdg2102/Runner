@@ -8,6 +8,7 @@ var Physics = require('./physics');
 var gameConstants = require('./gameConstants');
 var LevelGenerator = require('./levelGenerator');
 var BackgroundGenerator = require('./backgroundGenerator');
+var Screens = require('./screens');
 
 var RunnerGame = function (frameHeight, frameWidth) {
   this.frameHeight = frameHeight;
@@ -16,6 +17,7 @@ var RunnerGame = function (frameHeight, frameWidth) {
   this.platforms = this.levelGenerator.platforms;
   this.backgroundGenerator = new BackgroundGenerator(this);
   this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
+  this.screens = new Screens(this);
   this.runner = new Runner([320, 350]);
   this.runnerDistance = 0;
   this.isPaused = false;
@@ -46,25 +48,18 @@ RunnerGame.prototype.draw = function (ctx) {
     obj.draw.call(obj, ctx);
   });
   // if (!this.isInIntro) {
-  //   this.displayScore(ctx);
+  //   this.screens.displayScore(ctx);
   // }
   // // draw pause overlay if game is paused
   // if (this.isPaused) {
-  //   this.displayPause(ctx);
+  //   this.screens.displayPause(ctx);
   // }
   // if (this.isInIntro) {
-  //   this.displayTitleScreen(ctx);
+  //   this.screens.displayTitleScreen(ctx);
   // }
   // if (this.isRunnerDead) {
-  //   this.displayDeath(ctx);
+  //   this.screens.displayDeath(ctx);
   // }
-};
-
-RunnerGame.prototype.displayScore = function (ctx) {
-  ctx.fillStyle = 'rgb(0, 0, 0)';
-  ctx.font = "36px sans-serif";
-  var displayDistance = Math.floor(this.runnerDistance / 100);
-  ctx.fillText(displayDistance + " m", 900, 60);
 };
 
 RunnerGame.prototype.closeInfoScreen = function () {
@@ -73,56 +68,28 @@ RunnerGame.prototype.closeInfoScreen = function () {
     this.isInIntro = false;
   } else {
     // otherwise we're resetting the game
-    this.isRunnerDead = false;
-    this.isInIntro = true;
-    this.runner.pos = [320, 350];
-    this.runner.vel = [0, 0];
-    this.runner.width = 20;
-    this.runner.height = 50;
-    this.runner.frameState = 'stand-right';
-    this.runner.runnerAnimator.spriteFrame = 1;
-    this.levelGenerator = new LevelGenerator(this);
-    this.platforms = this.levelGenerator.platforms;
-    this.backgroundGenerator = new BackgroundGenerator(this);
-    this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
-    this.runnerDistance = 0;
+    this.reset();
   }
+};
+
+RunnerGame.prototype.reset = function () {
+  this.isRunnerDead = false;
+  this.isInIntro = true;
+  this.runner.pos = [320, 350];
+  this.runner.vel = [0, 0];
+  this.runner.width = 20;
+  this.runner.height = 50;
+  this.runner.frameState = 'stand-right';
+  this.runner.runnerAnimator.spriteFrame = 1;
+  this.levelGenerator = new LevelGenerator(this);
+  this.platforms = this.levelGenerator.platforms;
+  this.backgroundGenerator = new BackgroundGenerator(this);
+  this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
+  this.runnerDistance = 0;
 };
 
 RunnerGame.prototype.togglePause = function () {
   this.isPaused = !this.isPaused;
-};
-
-RunnerGame.prototype.displayPause = function (ctx) {
-  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
-  ctx.fillStyle = 'rgb(255, 255, 255)';
-  ctx.font = "36px sans-serif";
-  ctx.fillText("PAUSED", 50, 75);
-};
-
-RunnerGame.prototype.displayTitleScreen = function (ctx) {
-  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
-  ctx.fillStyle = 'rgb(255, 255, 255)';
-  ctx.font = '130px sans-serif';
-  ctx.fillText("RUNNER", 50, 180);
-  ctx.font = '24px sans-serif';
-  ctx.fillText("LEFT and RIGHT to run", 50, 300);
-  ctx.fillText("UP to jump", 50, 350);
-  ctx.fillText("UP again to double jump", 50, 400);
-  ctx.fillText("P to pause", 50, 450);
-  ctx.font = '40px sans-serif';
-  ctx.fillText("Press Enter to play", 340, 550);
-};
-
-RunnerGame.prototype.displayDeath = function (ctx) {
-  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
-  ctx.fillStyle = 'rgb(255, 255, 255)';
-  ctx.font = '40px sans-serif';
-  ctx.fillText("You died", 420, 200);
-  ctx.fillText("Press Enter to restart", 300, 550);
 };
 
 RunnerGame.prototype.advanceFrame = function () {

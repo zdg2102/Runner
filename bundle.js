@@ -74,6 +74,7 @@
 	var gameConstants = __webpack_require__(4);
 	var LevelGenerator = __webpack_require__(9);
 	var BackgroundGenerator = __webpack_require__(10);
+	var Screens = __webpack_require__(13);
 	
 	var RunnerGame = function (frameHeight, frameWidth) {
 	  this.frameHeight = frameHeight;
@@ -82,6 +83,7 @@
 	  this.platforms = this.levelGenerator.platforms;
 	  this.backgroundGenerator = new BackgroundGenerator(this);
 	  this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
+	  this.screens = new Screens(this);
 	  this.runner = new Runner([320, 350]);
 	  this.runnerDistance = 0;
 	  this.isPaused = false;
@@ -112,25 +114,18 @@
 	    obj.draw.call(obj, ctx);
 	  });
 	  // if (!this.isInIntro) {
-	  //   this.displayScore(ctx);
+	  //   this.screens.displayScore(ctx);
 	  // }
 	  // // draw pause overlay if game is paused
 	  // if (this.isPaused) {
-	  //   this.displayPause(ctx);
+	  //   this.screens.displayPause(ctx);
 	  // }
 	  // if (this.isInIntro) {
-	  //   this.displayTitleScreen(ctx);
+	  //   this.screens.displayTitleScreen(ctx);
 	  // }
 	  // if (this.isRunnerDead) {
-	  //   this.displayDeath(ctx);
+	  //   this.screens.displayDeath(ctx);
 	  // }
-	};
-	
-	RunnerGame.prototype.displayScore = function (ctx) {
-	  ctx.fillStyle = 'rgb(0, 0, 0)';
-	  ctx.font = "36px sans-serif";
-	  var displayDistance = Math.floor(this.runnerDistance / 100);
-	  ctx.fillText(displayDistance + " m", 900, 60);
 	};
 	
 	RunnerGame.prototype.closeInfoScreen = function () {
@@ -139,56 +134,28 @@
 	    this.isInIntro = false;
 	  } else {
 	    // otherwise we're resetting the game
-	    this.isRunnerDead = false;
-	    this.isInIntro = true;
-	    this.runner.pos = [320, 350];
-	    this.runner.vel = [0, 0];
-	    this.runner.width = 20;
-	    this.runner.height = 50;
-	    this.runner.frameState = 'stand-right';
-	    this.runner.runnerAnimator.spriteFrame = 1;
-	    this.levelGenerator = new LevelGenerator(this);
-	    this.platforms = this.levelGenerator.platforms;
-	    this.backgroundGenerator = new BackgroundGenerator(this);
-	    this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
-	    this.runnerDistance = 0;
+	    this.reset();
 	  }
+	};
+	
+	RunnerGame.prototype.reset = function () {
+	  this.isRunnerDead = false;
+	  this.isInIntro = true;
+	  this.runner.pos = [320, 350];
+	  this.runner.vel = [0, 0];
+	  this.runner.width = 20;
+	  this.runner.height = 50;
+	  this.runner.frameState = 'stand-right';
+	  this.runner.runnerAnimator.spriteFrame = 1;
+	  this.levelGenerator = new LevelGenerator(this);
+	  this.platforms = this.levelGenerator.platforms;
+	  this.backgroundGenerator = new BackgroundGenerator(this);
+	  this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
+	  this.runnerDistance = 0;
 	};
 	
 	RunnerGame.prototype.togglePause = function () {
 	  this.isPaused = !this.isPaused;
-	};
-	
-	RunnerGame.prototype.displayPause = function (ctx) {
-	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
-	  ctx.fillStyle = 'rgb(255, 255, 255)';
-	  ctx.font = "36px sans-serif";
-	  ctx.fillText("PAUSED", 50, 75);
-	};
-	
-	RunnerGame.prototype.displayTitleScreen = function (ctx) {
-	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
-	  ctx.fillStyle = 'rgb(255, 255, 255)';
-	  ctx.font = '130px sans-serif';
-	  ctx.fillText("RUNNER", 50, 180);
-	  ctx.font = '24px sans-serif';
-	  ctx.fillText("LEFT and RIGHT to run", 50, 300);
-	  ctx.fillText("UP to jump", 50, 350);
-	  ctx.fillText("UP again to double jump", 50, 400);
-	  ctx.fillText("P to pause", 50, 450);
-	  ctx.font = '40px sans-serif';
-	  ctx.fillText("Press Enter to play", 340, 550);
-	};
-	
-	RunnerGame.prototype.displayDeath = function (ctx) {
-	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
-	  ctx.fillStyle = 'rgb(255, 255, 255)';
-	  ctx.font = '40px sans-serif';
-	  ctx.fillText("You died", 420, 200);
-	  ctx.fillText("Press Enter to restart", 300, 550);
 	};
 	
 	RunnerGame.prototype.advanceFrame = function () {
@@ -348,7 +315,7 @@
 	
 	  jumpMaxMagnitude: 250,
 	
-	  numJumps: 2
+	  numJumps: 10000 //2
 	
 	};
 	
@@ -443,6 +410,8 @@
 	
 	Runner.prototype.handleContact = function (contact) {
 	  // handles contact detail object passed from Physics
+	  // console.log(this.vel);
+	  // debugger;
 	  if (contact.contactType === 'stand') {
 	    this.jumpsRemaining = gameConstants.numJumps;
 	    this.standOnPlatform();
@@ -559,6 +528,8 @@
 	
 	  addGravity: function (vel) {
 	    var gravityVector = [0, gameConstants.gravity];
+	    // console.log(vel);
+	    // debugger;
 	    return Util.vectorSum(vel, gravityVector);
 	  },
 	
@@ -582,7 +553,8 @@
 	  handleTopContact: function (movingObj, contactPos) {
 	    // if the only vertical velocity is gravity,
 	    // movingObject is standing on top of other object
-	    if (movingObj.vel[1] === gameConstants.gravity) {
+	    // console.log(movingObj.vel[1]);
+	    if (movingObj.vel[1] === 0 || movingObj.vel[1] === gameConstants.gravity * 2) {
 	      return {
 	        contactType: 'stand'
 	      };
@@ -643,6 +615,29 @@
 	      surfaceXTop, surfaceXBottom)) {
 	      scalingX = null;
 	    }
+	    if (scalingY && scalingX) {
+	      // should very rarely occur, but defaults in favor
+	      // of top
+	      return {
+	        surface: 'y',
+	        contactPos: [projectedX, surfaceY]
+	      };
+	    } else if (scalingY) {
+	      return {
+	        surface: 'y',
+	        contactPos: [projectedX, surfaceY]
+	      };
+	    } else if (scalingX) {
+	      return {
+	        surface: 'x',
+	        contactPos: [surfaceX, projectedY]
+	      };
+	    } else {
+	      return {
+	        surface: null,
+	        contactPos: null
+	      };
+	    }
 	
 	  },
 	
@@ -652,182 +647,39 @@
 	    // otherwise returns null
 	
 	    // set up variable aliases for easier reading
+	    // need to account for the runner having two heights
+	    var aHeight = objA.collideHeight || objA.height;
+	    var aWidth = objA.collideWidth || objA.width;
+	    var bHeight = objB.collideHeight || objB.height;
+	    var bWidth = objB.collideWidth || objB.width;
 	    var objALeft = objA.pos[0];
-	    var objARight = objA.pos[0] + objA.width;
+	    var objARight = objA.pos[0] + aWidth;
 	    var objATop = objA.pos[1];
-	    var objABottom = objA.pos[1] + objA.height;
+	    var objABottom = objA.pos[1] + aHeight;
 	    var objBLeft = objB.pos[0];
-	    var objBRight = objB.pos[0] + objB.width;
+	    var objBRight = objB.pos[0] + bWidth;
 	    var objBTop = objB.pos[1];
-	    var objBBottom = objB.pos[1] + objB.height;
+	    var objBBottom = objB.pos[1] + bHeight;
 	
-	    var contactInfo;
+	    var contactInfo, contactSurface, contactPos;
 	    if (Util.isBetween(objABottom, objBTop, objBBottom) &&
 	      Util.isBetween(objARight, objBLeft, objBRight)) {
 	      // this means objA's bottom-right corner is embedded
 	      // in or touching objB
-	      contactInfo = this.determineCrossing();
+	      contactInfo = this.determineCrossing(
+	        objARight, objABottom, objA.vel[0], objA.vel[1],
+	        objBLeft, objBTop, objBBottom, objBTop, objBLeft,
+	        objBRight
+	      );
+	      contactSurface = contactInfo.surface;
+	      contactPos = contactInfo.contactPos;
 	
-	      var x_now = objARight;
-	      var y_now = objABottom;
-	      var v_x = objA.vel[0];
-	      var v_y = objA.vel[1];
-	      var y_crossing = objBTop;
-	      var x_crossing = objBLeft;
-	      var y_scaling = (y_now - y_crossing) / v_y;
-	      var x_scaling = (x_now - x_crossing) / v_x;
-	      var x_test = x_now - (y_scaling * v_x);
-	      var y_test = y_now - (x_scaling * v_y);
-	      if (y_scaling < 0 ||
-	        !Util.isBetween(x_test, objBLeft, objBRight)) {
-	        y_scaling = null;
-	      }
-	      if (x_scaling < 0 ||
-	        !Util.isBetween(y_test, objBTop, objBBottom)) {
-	        x_scaling = null;
-	      }
-	      // if both have a valid crossing, use the closer one
-	      if (y_scaling && x_scaling) {
-	        console.log("stupid case happening");
-	        if (y_scaling <= x_scaling) {
-	
-	
-	
-	        } else {
-	          var height = objA.collideHeight || objA.height;
-	          var width = objA.collideWidth || objA.width;
-	          return {
-	            contactType: 'collision',
-	            fromDirection: 'left',
-	            stopPos: [x_crossing - width, y_crossing - height]
-	          };
-	        }
-	      } else if (y_scaling) {
-	        if (objAVertVel === gameConstants.gravity) {
-	          return {
-	            contactType: 'stand'
-	          };
-	        } else if (objAVertVel > 0) {
-	          // need to account for the runner having two height
-	          // values
-	          var height = objA.collideHeight || objA.height;
-	          var width = objA.collideWidth || objA.width;
-	          return {
-	            contactType: 'collision',
-	            fromDirection: 'above',
-	            stopPos: [x_test - width, y_crossing - height]
-	          };
-	        }
-	      } else if (x_scaling) {
-	        var height = objA.collideHeight || objA.height;
-	        var width = objA.collideWidth || objA.width;
-	        return {
-	          contactType: 'collision',
-	          fromDirection: 'left',
-	          stopPos: [x_crossing - width, y_test - height]
-	        };
+	      if (contactSurface === 'y') {
+	        return this.handleTopContact(objA, contactPos);
+	      } else if (contactSurface === 'x') {
+	        return this.handleLeftContact(objA, contactPos);
 	      }
 	
-	      // if scaling is negative, reversed vector
-	      // will never cross plane
-	    //   if (scaling >= 0) {
-	    //     x_crossing = x_now - (scaling * v_x);
-	    //     if (Util.isBetween(x_crossing, objBLeft, objBRight)) {
-	    //
-	    //       console.log(x_crossing + " " + y_crossing);
-	    //
-	    //       // this means the contact came through the top
-	    //       if (objAVertVel === gameConstants.gravity) {
-	    //         return {
-	    //           contactType: 'stand'
-	    //         };
-	    //       } else if (objAVertVel > 0) {
-	    //         // need to account for the runner having two height
-	    //         // values
-	    //         var height = objA.collideHeight || objA.height;
-	    //         var width = objA.collideWidth || objA.width;
-	    //         return {
-	    //           contactType: 'collision',
-	    //           fromDirection: 'above',
-	    //           stopPos: [x_crossing - width, y_crossing - height]
-	    //         };
-	    //       }
-	    //     }
-	    //   }
-	    //   // now try for collision from the left
-	    //   x_crossing = objBLeft;
-	    //   scaling = (x_now - x_crossing) / v_x;
-	    //   if (scaling >= 0) {
-	    //     y_crossing = y_now - (scaling * v_y);
-	    //     if (Util.isBetween(y_crossing, objBTop, objBBottom)) {
-	    //       console.log("hit left!");
-	    //       var height = objA.collideHeight || objA.height;
-	    //       var width = objA.collideWidth || objA.width;
-	    //       return {
-	    //         contactType: 'collision',
-	    //         fromDirection: 'left',
-	    //         stopPos: [x_crossing - width, y_crossing - height]
-	    //       };
-	    //     }
-	    //   }
-	    }
-	
-	
-	    if (Util.isBetween(objABottom, objBTop, objBBottom) &&
-	      (Util.isBetween(objARight, objBLeft, objBRight) ||
-	      Util.isBetween(objALeft, objBLeft, objBRight))) {
-	      // objA hits objB from above
-	      // if objA velocity is only equal to gravity,
-	      // objA is standing on objB
-	      // if (objAVertVel === gameConstants.gravity) {
-	      //   return {
-	      //     contactType: 'stand'
-	      //   };
-	      // } else if (objAVertVel > 0) {
-	      //   // need to account for the runner having two height
-	      //   // values
-	      //   var height = objA.collideHeight || objA.height;
-	      //   return {
-	      //     contactType: 'collision',
-	      //     fromDirection: 'above',
-	      //     stopPos: [objALeft, objBTop - height]
-	      //   };
-	      // }
-	
-	    } else if (Util.isBetween(objATop, objBTop, objBBottom) &&
-	      (Util.isBetween(objARight, objBLeft, objBRight) ||
-	      Util.isBetween(objALeft, objBLeft, objBRight)) &&
-	      objAVertVel < 0) {
-	      // return {
-	      //   contactType: 'collision',
-	      //   fromDirection: 'below',
-	      //   stopPos: [objALeft, objBBottom]
-	      // };
-	
-	    } else if (Util.isBetween(objARight, objBLeft, objBRight) &&
-	      (Util.isBetween(objATop, objBTop, objBBottom) ||
-	      Util.isBetween(objABottom, objBTop, objBBottom)) &&
-	      objAHorizVel > 0) {
-	      // objA hits objB from the left
-	      // need to account for the runner having two width
-	      // values
-	      // var width = objA.collideWidth || objA.width;
-	      // return {
-	      //   contactType: 'collision',
-	      //   fromDirection: 'left',
-	      //   stopPos: [objBLeft - width, objATop]
-	      // };
-	
-	    } else if (Util.isBetween(objALeft, objBLeft, objBRight) &&
-	      (Util.isBetween(objATop, objBTop, objBBottom) ||
-	      Util.isBetween(objABottom, objBTop, objBBottom)) &&
-	      objAHorizVel < 0) {
-	      // objA hits objB from the right
-	      // return {
-	      //   contactType: 'collision',
-	      //   fromDirection: 'right',
-	      //   stopPos: [objBRight, objATop]
-	      // };
 	
 	    } else {
 	      return null;
@@ -876,6 +728,11 @@
 	};
 	
 	RunnerAnimator.prototype.draw = function (ctx) {
+	  // draw frame for debugging
+	  ctx.fillStyle = 'blue';
+	  ctx.fillRect(this.runner.pos[0], this.runner.pos[1],
+	    this.runner.width, this.runner.height);
+	
 	  var id = this.runner.frameState + (Math.floor(this.spriteFrame /
 	    gameConstants.framesPerSprite) + 1);
 	  var sprite = this.spriteAssets[id];
@@ -1227,6 +1084,58 @@
 	};
 	
 	module.exports = GameView;
+
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	// handles screen-level display information
+	
+	var Screens = function (game) {
+	  this.game = game;
+	};
+	
+	Screens.prototype.displayScore = function (ctx) {
+	  ctx.fillStyle = 'rgb(0, 0, 0)';
+	  ctx.font = "36px sans-serif";
+	  var displayDistance = Math.floor(this.game.runnerDistance / 100);
+	  ctx.fillText(displayDistance + " m", 900, 60);
+	};
+	
+	Screens.prototype.displayPause = function (ctx) {
+	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
+	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+	  ctx.fillStyle = 'rgb(255, 255, 255)';
+	  ctx.font = "36px sans-serif";
+	  ctx.fillText("PAUSED", 50, 75);
+	};
+	
+	Screens.prototype.displayTitleScreen = function (ctx) {
+	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
+	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+	  ctx.fillStyle = 'rgb(255, 255, 255)';
+	  ctx.font = '130px sans-serif';
+	  ctx.fillText("RUNNER", 50, 180);
+	  ctx.font = '24px sans-serif';
+	  ctx.fillText("LEFT and RIGHT to run", 50, 300);
+	  ctx.fillText("UP to jump", 50, 350);
+	  ctx.fillText("UP again to double jump", 50, 400);
+	  ctx.fillText("P to pause", 50, 450);
+	  ctx.font = '40px sans-serif';
+	  ctx.fillText("Press Enter to play", 340, 550);
+	};
+	
+	Screens.prototype.displayDeath = function (ctx) {
+	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
+	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+	  ctx.fillStyle = 'rgb(255, 255, 255)';
+	  ctx.font = '40px sans-serif';
+	  ctx.fillText("You died", 420, 200);
+	  ctx.fillText("Press Enter to restart", 300, 550);
+	};
+	
+	module.exports = Screens;
 
 
 /***/ }

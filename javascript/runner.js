@@ -82,6 +82,8 @@ Runner.prototype.determineState = function () {
 
 Runner.prototype.handleContact = function (contact) {
   // handles contact detail object passed from Physics
+  // console.log(this.vel);
+  // debugger;
   if (contact.contactType === 'stand') {
     this.jumpsRemaining = gameConstants.numJumps;
     this.standOnPlatform();
