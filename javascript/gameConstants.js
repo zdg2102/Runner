@@ -6,7 +6,7 @@ var gameConstants = {
 
   gravity: 0.4,
 
-  maxRunVel: 7,
+  maxRunVel: 10,
 
   runAccel: 2,
 
@@ -14,7 +14,7 @@ var gameConstants = {
 
   friction: 2,
 
-  scrollSpeed: 6,
+  scrollSpeed: 8,
 
   parallaxFactor: 0.3,
 

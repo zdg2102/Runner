@@ -85,6 +85,7 @@ RunnerGame.prototype.closeInfoScreen = function () {
     this.platforms = this.levelGenerator.platforms;
     this.backgroundGenerator = new BackgroundGenerator(this);
     this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
+    this.runnerDistance = 0;
   }
 };
 

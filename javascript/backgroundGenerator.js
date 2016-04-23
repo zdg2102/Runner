@@ -19,7 +19,7 @@ BackgroundGenerator.prototype.populateInitialScreen = function () {
   while (left < this.game.frameWidth) {
     var top = Math.random() * (this.game.frameHeight * 0.7);
     building = new Building([left, top],
-      width, this.buildingHeight);
+      width, this.buildingHeight, this.game);
     this.backgroundObjects.push(building);
     left += width;
     width = Math.floor(gameConstants.buildingMinWidth +
@@ -36,7 +36,7 @@ BackgroundGenerator.prototype.checkAndAddBuilding = function () {
     var left = this.lastObject.pos[0] + this.lastObject.width;
     var top = Math.random() * (this.game.frameHeight / 3);
     var building = new Building([left, top],
-      width, this.buildingHeight);
+      width, this.buildingHeight, this.game);
     this.backgroundObjects.push(building);
     this.lastObject = building;
   }
