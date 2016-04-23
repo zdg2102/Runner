@@ -51,9 +51,9 @@ RunnerGame.prototype.draw = function (ctx) {
   //   this.screens.displayScore(ctx);
   // }
   // // draw pause overlay if game is paused
-  // if (this.isPaused) {
-  //   this.screens.displayPause(ctx);
-  // }
+  if (this.isPaused) {
+    this.screens.displayPause(ctx);
+  }
   // if (this.isInIntro) {
   //   this.screens.displayTitleScreen(ctx);
   // }
@@ -93,7 +93,8 @@ RunnerGame.prototype.togglePause = function () {
 };
 
 RunnerGame.prototype.advanceFrame = function () {
-  // if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
+  if (!this.isPaused) {
+  //  && !this.isInIntro && !this.isRunnerDead) {
     GameControls.checkHeldKeys(this.runner);
     this.checkRunnerDeath();
     this.checkRunnerContact();
@@ -103,7 +104,7 @@ RunnerGame.prototype.advanceFrame = function () {
     this.backgroundGenerator.checkAndAddBuilding();
     this.levelGenerator.checkAndClearOffscreenPlatform();
     this.backgroundGenerator.checkAndClearOffscreenBuilding();
-  // }
+  }
 };
 
 RunnerGame.prototype.scroll = function () {

@@ -17,7 +17,7 @@ var Building = function (pos, width, height, game) {
   } else if (this.pos[1] > 120 && Math.random() < 0.15) {
     this.buildingType = 'pyramid';
   }
-  this.windowSpacing = Math.floor((this.width - 40) / 3);
+  this.windowSpacing = Math.round((this.width - 40) / 3);
   this.setColor();
 };
 
@@ -28,9 +28,9 @@ Building.prototype.setColor = function () {
     this.g = null;
     this.b = null;
   } else {
-    this.r = Math.floor(200 + Math.random() * 20);
-    this.g = Math.floor(200 + Math.random() * 20);
-    this.b = Math.floor(200 + Math.random() * 20);
+    this.r = Math.round(200 + Math.random() * 20);
+    this.g = Math.round(200 + Math.random() * 20);
+    this.b = Math.round(200 + Math.random() * 20);
   }
 };
 
@@ -88,7 +88,7 @@ Building.prototype.addPyramidRoof = function (ctx) {
   ctx.fillStyle = 'rgb(' + this.r + ',' + this.g + ',' + this.b + ')';
   ctx.beginPath();
   ctx.moveTo(this.pos[0], this.pos[1]);
-  ctx.lineTo(this.pos[0] + (this.width / 2), this.pos[1] - 100);
+  ctx.lineTo(this.pos[0] + Math.round(this.width / 2), this.pos[1] - 100);
   ctx.lineTo(this.pos[0] + this.width, this.pos[1] + 3);
   ctx.fill();
 };

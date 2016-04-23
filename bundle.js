@@ -117,9 +117,9 @@
 	  //   this.screens.displayScore(ctx);
 	  // }
 	  // // draw pause overlay if game is paused
-	  // if (this.isPaused) {
-	  //   this.screens.displayPause(ctx);
-	  // }
+	  if (this.isPaused) {
+	    this.screens.displayPause(ctx);
+	  }
 	  // if (this.isInIntro) {
 	  //   this.screens.displayTitleScreen(ctx);
 	  // }
@@ -159,7 +159,8 @@
 	};
 	
 	RunnerGame.prototype.advanceFrame = function () {
-	  // if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
+	  if (!this.isPaused) {
+	  //  && !this.isInIntro && !this.isRunnerDead) {
 	    GameControls.checkHeldKeys(this.runner);
 	    this.checkRunnerDeath();
 	    this.checkRunnerContact();
@@ -169,7 +170,7 @@
 	    this.backgroundGenerator.checkAndAddBuilding();
 	    this.levelGenerator.checkAndClearOffscreenPlatform();
 	    this.backgroundGenerator.checkAndClearOffscreenBuilding();
-	  // }
+	  }
 	};
 	
 	RunnerGame.prototype.scroll = function () {
@@ -266,9 +267,9 @@
 	  ctx.lineWidth = gameConstants.platformOutlineThickness;
 	  ctx.strokeRect(
 	    this.pos[0],
-	    this.pos[1] + gameConstants.platformOutlineThickness / 2,
+	    this.pos[1] + Math.round(gameConstants.platformOutlineThickness / 2),
 	    this.width,
-	    this.height - gameConstants.platformOutlineThickness / 2
+	    this.height - Math.round(gameConstants.platformOutlineThickness / 2)
 	  );
 	};
 	
@@ -410,8 +411,6 @@
 	
 	Runner.prototype.handleContact = function (contact) {
 	  // handles contact detail object passed from Physics
-	  // console.log(this.vel);
-	  // debugger;
 	  if (contact.contactType === 'stand') {
 	    this.jumpsRemaining = gameConstants.numJumps;
 	    this.standOnPlatform();
@@ -423,6 +422,11 @@
 	    if (contact.fromDirection === 'above') {
 	      this.lastContactType = 'collision';
 	    }
+	  }
+	  if (contact.contactType === 'stick') {
+	    this.jumpsRemaining = gameConstants.numJumps;
+	    // this.stickToWall(); not written yet
+	    this.lastContactType = 'stick';
 	  }
 	};
 	
@@ -448,10 +452,6 @@
 	  var runAccel = [sign * gameConstants.friction, 0];
 	  // if velocity is less than max run velocity, add extra
 	  // term beyond overcoming friction to allow acceleration
-	
-	  // FINDTAG this may break...
-	  // if ((dir === 'left' && this.vel[0] >= -(gameConstants.maxRunVel)) ||
-	  //   (dir === 'right' && this.vel[0] <= gameConstants.maxRunVel)) {
 	
 	  if (!(Math.sign(this.vel[0]) === sign &&
 	    Math.abs(this.vel[0]) > gameConstants.maxRunVel)) {
@@ -528,8 +528,6 @@
 	
 	  addGravity: function (vel) {
 	    var gravityVector = [0, gameConstants.gravity];
-	    // console.log(vel);
-	    // debugger;
 	    return Util.vectorSum(vel, gravityVector);
 	  },
 	
@@ -550,28 +548,24 @@
 	    }
 	  },
 	
-	  handleTopContact: function (movingObj, contactPos) {
+	  handleTopContact: function (movingObj, stopPos) {
 	    // if the only vertical velocity is gravity,
 	    // movingObject is standing on top of other object
-	    // console.log(movingObj.vel[1]);
-	    if (movingObj.vel[1] === 0 || movingObj.vel[1] === gameConstants.gravity * 2) {
+	    // console.log(movingObj.vel[1])
+	    if (movingObj.vel[1] === gameConstants.gravity) {
 	      return {
 	        contactType: 'stand'
 	      };
 	    } else if (movingObj.vel[1] > 0) {
-	      // take collideHeight if it's available (only runner
-	      // has it), otherwise take height
-	      var height = movingObj.collideHeight || movingObj.height;
-	      var width = movingObj.collideWidth || movingObj.width;
 	      return {
 	        contactType: 'collision',
 	        fromDirection: 'above',
-	        stopPos: [contactPos[0] - width, contactPos[1] - height]
+	        stopPos: stopPos
 	      };
 	    }
 	  },
 	
-	  handleLeftContact: function (movingObj, contactPos) {
+	  handleLeftContact: function (movingObj, stopPos) {
 	    // if the only vertical velocity is gravity,
 	    // movingObject is stuck to the side of the other
 	    // object
@@ -580,14 +574,27 @@
 	        contactType: 'stick'
 	      };
 	    } else if (movingObj.vel[0] > 0) {
-	      // take collideHeight if it's available (only runner
-	      // has it), otherwise take height
-	      var height = movingObj.collideHeight || movingObj.height;
-	      var width = movingObj.collideWidth || movingObj.width;
 	      return {
 	        contactType: 'collision',
 	        fromDirection: 'left',
-	        stopPos: [contactPos[0] - width, contactPos[1] - height]
+	        stopPos: stopPos
+	      };
+	    }
+	  },
+	
+	  handleRightContact: function (movingObj, stopPos) {
+	    // if the only vertical velocity is gravity,
+	    // movingObject is stuck to the side of the other
+	    // object
+	    if (movingObj.vel[1] === gameConstants.gravity) {
+	      return {
+	        contactType: 'stick'
+	      };
+	    } else if (movingObj.vel[0] < 0) {
+	      return {
+	        contactType: 'collision',
+	        fromDirection: 'right',
+	        stopPos: stopPos
 	      };
 	    }
 	  },
@@ -599,44 +606,46 @@
 	    // which surface was crossed
 	    // first determines what scaling factors would be required
 	    // to cross both the surfaceX and surfaceY planes
-	    var scalingY = (nowY - surfaceY) / velY;
-	    var scalingX = (nowX - surfaceX) / velX;
+	    var scalingY = Math.round((nowY - surfaceY) / velY);
+	    var scalingX = Math.round((nowX - surfaceX) / velX);
 	    var projectedX = nowX - (scalingY * velX);
 	    var projectedY = nowY - (scalingX * velY);
 	    // a crossing is invalid if the scaling is negative
 	    // (which means the vector is pointed the wrong way),
-	    // or if the projected other point is not within
+	    // greater than one (which means the collision could
+	    // not have happened within the last frame), or
+	    // if the projected other point is not within
 	    // the allowed bounds
-	    if (scalingY < 0 || !Util.isBetween(projectedX,
-	      surfaceYLeft, surfaceYRight)) {
+	    if (scalingY < 0 || scalingY > 1 ||
+	      !Util.isBetween(projectedX, surfaceYLeft, surfaceYRight)) {
 	      scalingY = null;
 	    }
-	    if (scalingX < 0 || !Util.isBetween(projectedY,
-	      surfaceXTop, surfaceXBottom)) {
+	    if (scalingX < 0 || scalingX > 1 ||
+	      !Util.isBetween(projectedY, surfaceXTop, surfaceXBottom)) {
 	      scalingX = null;
 	    }
-	    if (scalingY && scalingX) {
+	    // need to include additional checks for zero to avoid
+	    // evaluating them as false
+	    if ((scalingY || scalingY === 0) &&
+	      (scalingX || scalingX === 0)) {
 	      // should very rarely occur, but defaults in favor
 	      // of top
 	      return {
 	        surface: 'y',
 	        contactPos: [projectedX, surfaceY]
 	      };
-	    } else if (scalingY) {
+	    } else if ((scalingY || scalingY === 0)) {
 	      return {
 	        surface: 'y',
 	        contactPos: [projectedX, surfaceY]
 	      };
-	    } else if (scalingX) {
+	    } else if ((scalingX || scalingX === 0)) {
 	      return {
 	        surface: 'x',
 	        contactPos: [surfaceX, projectedY]
 	      };
 	    } else {
-	      return {
-	        surface: null,
-	        contactPos: null
-	      };
+	      return null;
 	    }
 	
 	  },
@@ -647,7 +656,8 @@
 	    // otherwise returns null
 	
 	    // set up variable aliases for easier reading
-	    // need to account for the runner having two heights
+	    // need to account for the runner's relevant
+	    // height having a different name
 	    var aHeight = objA.collideHeight || objA.height;
 	    var aWidth = objA.collideWidth || objA.width;
 	    var bHeight = objB.collideHeight || objB.height;
@@ -662,25 +672,60 @@
 	    var objBBottom = objB.pos[1] + bHeight;
 	
 	    var contactInfo, contactSurface, contactPos;
-	    if (Util.isBetween(objABottom, objBTop, objBBottom) &&
-	      Util.isBetween(objARight, objBLeft, objBRight)) {
-	      // this means objA's bottom-right corner is embedded
-	      // in or touching objB
+	
+	    // checks whether any corner has passed into or through
+	    // the other object
+	    if (objABottom >= objBTop && objARight >= objBLeft) {
+	      // this means objA's bottom-right corner is past
+	      // the top or left of objB, so collision needs
+	      // to be checked
 	      contactInfo = this.determineCrossing(
 	        objARight, objABottom, objA.vel[0], objA.vel[1],
 	        objBLeft, objBTop, objBBottom, objBTop, objBLeft,
 	        objBRight
 	      );
-	      contactSurface = contactInfo.surface;
-	      contactPos = contactInfo.contactPos;
-	
-	      if (contactSurface === 'y') {
-	        return this.handleTopContact(objA, contactPos);
-	      } else if (contactSurface === 'x') {
-	        return this.handleLeftContact(objA, contactPos);
+	      if (contactInfo && contactInfo.surface === 'y') {
+	        contactInfo.surface = 'top';
+	        contactInfo.stopPos = [contactInfo.contactPos[0] - aWidth,
+	        objBTop - aHeight];
+	      } else if (contactInfo && contactInfo.surface === 'x') {
+	        contactInfo.surface = 'left';
+	        contactInfo.stopPos = [objBLeft - aWidth,
+	        contactInfo.contactPos[1] - aHeight];
+	      }
+	    }
+	    if (!contactInfo && objABottom >= objBTop &&
+	      objALeft <= objBRight) {
+	      contactInfo = this.determineCrossing(
+	        objALeft, objABottom, objA.vel[0], objA.vel[1],
+	        objBRight, objBTop, objBBottom, objBTop, objBLeft,
+	        objBRight
+	      );
+	      if (contactInfo && contactInfo.surface === 'y') {
+	        contactInfo.surface = 'top';
+	        contactInfo.stopPos = [contactInfo.contactPos[0],
+	        objBTop - aHeight];
+	      } else if (contactInfo && contactInfo.surface === 'x') {
+	        contactInfo.surface = 'right';
+	        contactInfo.stopPos = [objBRight,
+	        contactInfo.contactPos[1] - aHeight];
 	      }
 	
+	    }
 	
+	    if (contactInfo) {
+	      contactSurface = contactInfo.surface;
+	      stopPos = contactInfo.stopPos;
+	
+	      if (contactSurface === 'top') {
+	        return this.handleTopContact(objA, stopPos);
+	      } else if (contactSurface === 'left') {
+	        return this.handleLeftContact(objA, stopPos);
+	      } else if (contactSurface === 'right') {
+	        return this.handleRightContact(objA, stopPos);
+	      } else if (contactSurface === 'bottom') {
+	        return this.handleBottomContact(objA, stopPos);
+	      }
 	    } else {
 	      return null;
 	    }
@@ -910,17 +955,17 @@
 	};
 	
 	BackgroundGenerator.prototype.populateInitialScreen = function () {
-	  var width = Math.floor(gameConstants.buildingMinWidth +
+	  var width = Math.round(gameConstants.buildingMinWidth +
 	    Math.random() * gameConstants.buildingAddWidth);
-	  var left = -(width / 3);
+	  var left = -Math.round(width / 3);
 	  var building;
 	  while (left < this.game.frameWidth) {
-	    var top = Math.random() * (this.game.frameHeight * 0.7);
+	    var top = Math.round(Math.random() * (this.game.frameHeight * 0.7));
 	    building = new Building([left, top],
 	      width, this.buildingHeight, this.game);
 	    this.backgroundObjects.push(building);
 	    left += width;
-	    width = Math.floor(gameConstants.buildingMinWidth +
+	    width = Math.round(gameConstants.buildingMinWidth +
 	      Math.random() * gameConstants.buildingAddWidth);
 	  }
 	  this.lastObject = building;
@@ -929,10 +974,10 @@
 	BackgroundGenerator.prototype.checkAndAddBuilding = function () {
 	  if (this.lastObject.pos[0] + this.lastObject.width <
 	    this.game.frameWidth + 2) {
-	    var width = Math.floor(gameConstants.buildingMinWidth +
+	    var width = Math.round(gameConstants.buildingMinWidth +
 	      Math.random() * gameConstants.buildingAddWidth);
 	    var left = this.lastObject.pos[0] + this.lastObject.width;
-	    var top = Math.random() * (this.game.frameHeight / 3);
+	    var top = Math.round(Math.random() * (this.game.frameHeight / 3));
 	    var building = new Building([left, top],
 	      width, this.buildingHeight, this.game);
 	    this.backgroundObjects.push(building);
@@ -979,7 +1024,7 @@
 	  } else if (this.pos[1] > 120 && Math.random() < 0.15) {
 	    this.buildingType = 'pyramid';
 	  }
-	  this.windowSpacing = Math.floor((this.width - 40) / 3);
+	  this.windowSpacing = Math.round((this.width - 40) / 3);
 	  this.setColor();
 	};
 	
@@ -990,9 +1035,9 @@
 	    this.g = null;
 	    this.b = null;
 	  } else {
-	    this.r = Math.floor(200 + Math.random() * 20);
-	    this.g = Math.floor(200 + Math.random() * 20);
-	    this.b = Math.floor(200 + Math.random() * 20);
+	    this.r = Math.round(200 + Math.random() * 20);
+	    this.g = Math.round(200 + Math.random() * 20);
+	    this.b = Math.round(200 + Math.random() * 20);
 	  }
 	};
 	
@@ -1050,7 +1095,7 @@
 	  ctx.fillStyle = 'rgb(' + this.r + ',' + this.g + ',' + this.b + ')';
 	  ctx.beginPath();
 	  ctx.moveTo(this.pos[0], this.pos[1]);
-	  ctx.lineTo(this.pos[0] + (this.width / 2), this.pos[1] - 100);
+	  ctx.lineTo(this.pos[0] + Math.round(this.width / 2), this.pos[1] - 100);
 	  ctx.lineTo(this.pos[0] + this.width, this.pos[1] + 3);
 	  ctx.fill();
 	};

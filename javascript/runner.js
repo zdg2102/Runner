@@ -82,8 +82,6 @@ Runner.prototype.determineState = function () {
 
 Runner.prototype.handleContact = function (contact) {
   // handles contact detail object passed from Physics
-  // console.log(this.vel);
-  // debugger;
   if (contact.contactType === 'stand') {
     this.jumpsRemaining = gameConstants.numJumps;
     this.standOnPlatform();
@@ -95,6 +93,11 @@ Runner.prototype.handleContact = function (contact) {
     if (contact.fromDirection === 'above') {
       this.lastContactType = 'collision';
     }
+  }
+  if (contact.contactType === 'stick') {
+    this.jumpsRemaining = gameConstants.numJumps;
+    // this.stickToWall(); not written yet
+    this.lastContactType = 'stick';
   }
 };
 
@@ -120,10 +123,6 @@ Runner.prototype.runAccelerate = function (dir) {
   var runAccel = [sign * gameConstants.friction, 0];
   // if velocity is less than max run velocity, add extra
   // term beyond overcoming friction to allow acceleration
-
-  // FINDTAG this may break...
-  // if ((dir === 'left' && this.vel[0] >= -(gameConstants.maxRunVel)) ||
-  //   (dir === 'right' && this.vel[0] <= gameConstants.maxRunVel)) {
 
   if (!(Math.sign(this.vel[0]) === sign &&
     Math.abs(this.vel[0]) > gameConstants.maxRunVel)) {

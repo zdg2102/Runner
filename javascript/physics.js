@@ -7,8 +7,6 @@ var Physics = {
 
   addGravity: function (vel) {
     var gravityVector = [0, gameConstants.gravity];
-    // console.log(vel);
-    // debugger;
     return Util.vectorSum(vel, gravityVector);
   },
 
@@ -29,28 +27,24 @@ var Physics = {
     }
   },
 
-  handleTopContact: function (movingObj, contactPos) {
+  handleTopContact: function (movingObj, stopPos) {
     // if the only vertical velocity is gravity,
     // movingObject is standing on top of other object
-    // console.log(movingObj.vel[1]);
-    if (movingObj.vel[1] === 0 || movingObj.vel[1] === gameConstants.gravity * 2) {
+    // console.log(movingObj.vel[1])
+    if (movingObj.vel[1] === gameConstants.gravity) {
       return {
         contactType: 'stand'
       };
     } else if (movingObj.vel[1] > 0) {
-      // take collideHeight if it's available (only runner
-      // has it), otherwise take height
-      var height = movingObj.collideHeight || movingObj.height;
-      var width = movingObj.collideWidth || movingObj.width;
       return {
         contactType: 'collision',
         fromDirection: 'above',
-        stopPos: [contactPos[0] - width, contactPos[1] - height]
+        stopPos: stopPos
       };
     }
   },
 
-  handleLeftContact: function (movingObj, contactPos) {
+  handleLeftContact: function (movingObj, stopPos) {
     // if the only vertical velocity is gravity,
     // movingObject is stuck to the side of the other
     // object
@@ -59,14 +53,27 @@ var Physics = {
         contactType: 'stick'
       };
     } else if (movingObj.vel[0] > 0) {
-      // take collideHeight if it's available (only runner
-      // has it), otherwise take height
-      var height = movingObj.collideHeight || movingObj.height;
-      var width = movingObj.collideWidth || movingObj.width;
       return {
         contactType: 'collision',
         fromDirection: 'left',
-        stopPos: [contactPos[0] - width, contactPos[1] - height]
+        stopPos: stopPos
+      };
+    }
+  },
+
+  handleRightContact: function (movingObj, stopPos) {
+    // if the only vertical velocity is gravity,
+    // movingObject is stuck to the side of the other
+    // object
+    if (movingObj.vel[1] === gameConstants.gravity) {
+      return {
+        contactType: 'stick'
+      };
+    } else if (movingObj.vel[0] < 0) {
+      return {
+        contactType: 'collision',
+        fromDirection: 'right',
+        stopPos: stopPos
       };
     }
   },
@@ -78,44 +85,46 @@ var Physics = {
     // which surface was crossed
     // first determines what scaling factors would be required
     // to cross both the surfaceX and surfaceY planes
-    var scalingY = (nowY - surfaceY) / velY;
-    var scalingX = (nowX - surfaceX) / velX;
+    var scalingY = Math.round((nowY - surfaceY) / velY);
+    var scalingX = Math.round((nowX - surfaceX) / velX);
     var projectedX = nowX - (scalingY * velX);
     var projectedY = nowY - (scalingX * velY);
     // a crossing is invalid if the scaling is negative
     // (which means the vector is pointed the wrong way),
-    // or if the projected other point is not within
+    // greater than one (which means the collision could
+    // not have happened within the last frame), or
+    // if the projected other point is not within
     // the allowed bounds
-    if (scalingY < 0 || !Util.isBetween(projectedX,
-      surfaceYLeft, surfaceYRight)) {
+    if (scalingY < 0 || scalingY > 1 ||
+      !Util.isBetween(projectedX, surfaceYLeft, surfaceYRight)) {
       scalingY = null;
     }
-    if (scalingX < 0 || !Util.isBetween(projectedY,
-      surfaceXTop, surfaceXBottom)) {
+    if (scalingX < 0 || scalingX > 1 ||
+      !Util.isBetween(projectedY, surfaceXTop, surfaceXBottom)) {
       scalingX = null;
     }
-    if (scalingY && scalingX) {
+    // need to include additional checks for zero to avoid
+    // evaluating them as false
+    if ((scalingY || scalingY === 0) &&
+      (scalingX || scalingX === 0)) {
       // should very rarely occur, but defaults in favor
       // of top
       return {
         surface: 'y',
         contactPos: [projectedX, surfaceY]
       };
-    } else if (scalingY) {
+    } else if ((scalingY || scalingY === 0)) {
       return {
         surface: 'y',
         contactPos: [projectedX, surfaceY]
       };
-    } else if (scalingX) {
+    } else if ((scalingX || scalingX === 0)) {
       return {
         surface: 'x',
         contactPos: [surfaceX, projectedY]
       };
     } else {
-      return {
-        surface: null,
-        contactPos: null
-      };
+      return null;
     }
 
   },
@@ -126,7 +135,8 @@ var Physics = {
     // otherwise returns null
 
     // set up variable aliases for easier reading
-    // need to account for the runner having two heights
+    // need to account for the runner's relevant
+    // height having a different name
     var aHeight = objA.collideHeight || objA.height;
     var aWidth = objA.collideWidth || objA.width;
     var bHeight = objB.collideHeight || objB.height;
@@ -141,25 +151,60 @@ var Physics = {
     var objBBottom = objB.pos[1] + bHeight;
 
     var contactInfo, contactSurface, contactPos;
-    if (Util.isBetween(objABottom, objBTop, objBBottom) &&
-      Util.isBetween(objARight, objBLeft, objBRight)) {
-      // this means objA's bottom-right corner is embedded
-      // in or touching objB
+
+    // checks whether any corner has passed into or through
+    // the other object
+    if (objABottom >= objBTop && objARight >= objBLeft) {
+      // this means objA's bottom-right corner is past
+      // the top or left of objB, so collision needs
+      // to be checked
       contactInfo = this.determineCrossing(
         objARight, objABottom, objA.vel[0], objA.vel[1],
         objBLeft, objBTop, objBBottom, objBTop, objBLeft,
         objBRight
       );
-      contactSurface = contactInfo.surface;
-      contactPos = contactInfo.contactPos;
-
-      if (contactSurface === 'y') {
-        return this.handleTopContact(objA, contactPos);
-      } else if (contactSurface === 'x') {
-        return this.handleLeftContact(objA, contactPos);
+      if (contactInfo && contactInfo.surface === 'y') {
+        contactInfo.surface = 'top';
+        contactInfo.stopPos = [contactInfo.contactPos[0] - aWidth,
+        objBTop - aHeight];
+      } else if (contactInfo && contactInfo.surface === 'x') {
+        contactInfo.surface = 'left';
+        contactInfo.stopPos = [objBLeft - aWidth,
+        contactInfo.contactPos[1] - aHeight];
+      }
+    }
+    if (!contactInfo && objABottom >= objBTop &&
+      objALeft <= objBRight) {
+      contactInfo = this.determineCrossing(
+        objALeft, objABottom, objA.vel[0], objA.vel[1],
+        objBRight, objBTop, objBBottom, objBTop, objBLeft,
+        objBRight
+      );
+      if (contactInfo && contactInfo.surface === 'y') {
+        contactInfo.surface = 'top';
+        contactInfo.stopPos = [contactInfo.contactPos[0],
+        objBTop - aHeight];
+      } else if (contactInfo && contactInfo.surface === 'x') {
+        contactInfo.surface = 'right';
+        contactInfo.stopPos = [objBRight,
+        contactInfo.contactPos[1] - aHeight];
       }
 
+    }
 
+    if (contactInfo) {
+      contactSurface = contactInfo.surface;
+      stopPos = contactInfo.stopPos;
+
+      if (contactSurface === 'top') {
+        return this.handleTopContact(objA, stopPos);
+      } else if (contactSurface === 'left') {
+        return this.handleLeftContact(objA, stopPos);
+      } else if (contactSurface === 'right') {
+        return this.handleRightContact(objA, stopPos);
+      } else if (contactSurface === 'bottom') {
+        return this.handleBottomContact(objA, stopPos);
+      }
     } else {
       return null;
     }
