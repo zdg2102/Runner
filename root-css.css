@@ -1,0 +1,55 @@
+body, canvas, img, figure, div, em, a {
+	padding: 0;
+	margin: 0;
+	border: 0;
+	font-size: inherit;
+	font-weight: inherit;
+	color: inherit;
+	font-style: inherit;
+	font-family: inherit;
+}
+
+body {
+	font-size: 20px;
+	font-family: sans-serif;
+	font-weight: normal;
+	color: lightslategrey;
+	font-weight: normal;
+}
+
+.group:after {
+	content: "";
+	display: block;
+	clear: both;
+}
+
+canvas {
+  display: block;
+  border: 1px solid black;
+  margin: 50px auto 50px;
+}
+
+img.sprite {
+  display: none;
+}
+
+.link-container {
+  width: 1000px;
+  margin: 0px auto;
+}
+
+.link-container em {
+  float: left;
+  font-weight: bold;
+  padding-right: 60px;
+}
+
+.link-container span {
+  float: left;
+  padding: 0px 60px;
+  border-left: 2px solid lightslategrey;
+}
+
+.link-container span:last-of-type {
+  border-right: 2px solid lightslategrey;
+}

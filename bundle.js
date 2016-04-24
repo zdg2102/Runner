@@ -47,7 +47,7 @@
 	// loader for attaching to canvas DOM element
 	
 	var RunnerGame = __webpack_require__(1);
-	var GameView = __webpack_require__(12);
+	var GameView = __webpack_require__(13);
 	
 	window.document.addEventListener('DOMContentLoaded', function () {
 	  var canvas = window.document.getElementById('canvas');
@@ -74,7 +74,7 @@
 	var gameConstants = __webpack_require__(4);
 	var LevelGenerator = __webpack_require__(9);
 	var BackgroundGenerator = __webpack_require__(10);
-	var Screens = __webpack_require__(13);
+	var Screens = __webpack_require__(12);
 	
 	var RunnerGame = function (frameHeight, frameWidth) {
 	  this.frameHeight = frameHeight;
@@ -1162,33 +1162,6 @@
 /* 12 */
 /***/ function(module, exports) {
 
-	// handles game's interaction wtih canvas element
-	
-	var GameView = function (game, ctx) {
-	  this.game = game;
-	  this.ctx = ctx;
-	};
-	
-	GameView.prototype.drawFrameAndLoop = function () {
-	  window.requestAnimationFrame(function () {
-	    this.generateFrame();
-	  }.bind(this));
-	};
-	
-	GameView.prototype.generateFrame = function () {
-	  this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight);
-	  this.game.draw(this.ctx);
-	  this.game.advanceFrame();
-	  this.drawFrameAndLoop();
-	};
-	
-	module.exports = GameView;
-
-
-/***/ },
-/* 13 */
-/***/ function(module, exports) {
-
 	// handles screen-level display information
 	
 	var Screens = function (game) {
@@ -1235,6 +1208,33 @@
 	};
 	
 	module.exports = Screens;
+
+
+/***/ },
+/* 13 */
+/***/ function(module, exports) {
+
+	// handles game's interaction wtih canvas element
+	
+	var GameView = function (game, ctx) {
+	  this.game = game;
+	  this.ctx = ctx;
+	};
+	
+	GameView.prototype.drawFrameAndLoop = function () {
+	  window.requestAnimationFrame(function () {
+	    this.generateFrame();
+	  }.bind(this));
+	};
+	
+	GameView.prototype.generateFrame = function () {
+	  this.ctx.clearRect(0, 0, this.game.frameWidth, this.game.frameHeight);
+	  this.game.draw(this.ctx);
+	  this.game.advanceFrame();
+	  this.drawFrameAndLoop();
+	};
+	
+	module.exports = GameView;
 
 
 /***/ }
