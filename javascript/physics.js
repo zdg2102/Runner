@@ -78,6 +78,16 @@ var Physics = {
     }
   },
 
+  handleBottomContact: function (movingObj, stopPos) {
+    if (movingObj.vel[1] < 0) {
+      return {
+        contactType: 'collision',
+        fromDirection: 'bottom',
+        stopPos: stopPos
+      };
+    }
+  },
+
   determineCrossing: function (nowX, nowY, velX, velY, surfaceX,
     surfaceXTop, surfaceXBottom, surfaceY, surfaceYLeft,
     surfaceYRight) {
@@ -175,6 +185,7 @@ var Physics = {
     }
     if (!contactInfo && objABottom >= objBTop &&
       objALeft <= objBRight) {
+      // collision on objA's bottom-left corner
       contactInfo = this.determineCrossing(
         objALeft, objABottom, objA.vel[0], objA.vel[1],
         objBRight, objBTop, objBBottom, objBTop, objBLeft,
@@ -189,7 +200,42 @@ var Physics = {
         contactInfo.stopPos = [objBRight,
         contactInfo.contactPos[1] - aHeight];
       }
-
+    }
+    if (!contactInfo && objATop <= objBBottom &&
+      objARight >= objBLeft) {
+      // collision on objA's top-right corner
+      contactInfo = this.determineCrossing(
+        objARight, objATop, objA.vel[0], objA.vel[1],
+        objBLeft, objBTop, objBBottom, objBBottom, objBLeft,
+        objBRight
+      );
+      if (contactInfo && contactInfo.surface === 'y') {
+        contactInfo.surface = 'bottom';
+        contactInfo.stopPos = [contactInfo.contactPos[0] - aWidth,
+        objBBottom];
+      } else if (contactInfo && contactInfo.surface === 'x') {
+        contactInfo.surface = 'left';
+        contactInfo.stopPos = [objBLeft,
+        contactInfo.contactPos[1]];
+      }
+    }
+    if (!contactInfo && objATop <= objBBottom &&
+      objALeft <= objBRight) {
+      // collision on objA's top-left corner
+      contactInfo = this.determineCrossing(
+        objALeft, objATop, objA.vel[0], objA.vel[1],
+        objBRight, objBTop, objBBottom, objBBottom, objBLeft,
+        objBRight
+      );
+      if (contactInfo && contactInfo.surface === 'y') {
+        contactInfo.surface = 'bottom';
+        contactInfo.stopPos = [contactInfo.contactPos[0],
+        objBBottom];
+      } else if (contactInfo && contactInfo.surface === 'x') {
+        contactInfo.surface = 'right';
+        contactInfo.stopPos = [objBRight,
+        contactInfo.contactPos[1]];
+      }
     }
 
     if (contactInfo) {

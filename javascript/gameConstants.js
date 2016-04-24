@@ -14,7 +14,7 @@ var gameConstants = {
 
   friction: 2,
 
-  scrollSpeed: 0, // 8
+  scrollSpeed: 8,
 
   parallaxFactor: 0.3,
 
@@ -34,7 +34,7 @@ var gameConstants = {
 
   jumpMaxMagnitude: 250,
 
-  numJumps: 10000 //2
+  numJumps: 2
 
 };
 

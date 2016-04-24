@@ -28,9 +28,9 @@ Building.prototype.setColor = function () {
     this.g = null;
     this.b = null;
   } else {
-    this.r = Math.round(200 + Math.random() * 20);
-    this.g = Math.round(200 + Math.random() * 20);
-    this.b = Math.round(200 + Math.random() * 20);
+    this.r = Math.round(160 + Math.random() * 20);
+    this.g = Math.round(160 + Math.random() * 20);
+    this.b = Math.round(160 + Math.random() * 20);
   }
 };
 

@@ -42,24 +42,25 @@ RunnerGame.prototype.environmentObjects = function () {
 };
 
 RunnerGame.prototype.draw = function (ctx) {
-  ctx.fillStyle = 'rgb(159, 182, 205)';
+  ctx.fillStyle = 'rgb(139, 162, 185)';
+  // ctx.fillStyle = 'rgb(159, 182, 205)';
   ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
   this.allObjects().forEach(function (obj) {
     obj.draw.call(obj, ctx);
   });
-  // if (!this.isInIntro) {
-  //   this.screens.displayScore(ctx);
-  // }
+  if (!this.isInIntro) {
+    this.screens.displayScore(ctx);
+  }
   // // draw pause overlay if game is paused
   if (this.isPaused) {
     this.screens.displayPause(ctx);
   }
-  // if (this.isInIntro) {
-  //   this.screens.displayTitleScreen(ctx);
-  // }
-  // if (this.isRunnerDead) {
-  //   this.screens.displayDeath(ctx);
-  // }
+  if (this.isInIntro) {
+    this.screens.displayTitleScreen(ctx);
+  }
+  if (this.isRunnerDead) {
+    this.screens.displayDeath(ctx);
+  }
 };
 
 RunnerGame.prototype.closeInfoScreen = function () {
@@ -93,8 +94,8 @@ RunnerGame.prototype.togglePause = function () {
 };
 
 RunnerGame.prototype.advanceFrame = function () {
-  if (!this.isPaused) {
-  //  && !this.isInIntro && !this.isRunnerDead) {
+  // if (!this.isPaused) {
+   if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
     GameControls.checkHeldKeys(this.runner);
     this.checkRunnerDeath();
     this.checkRunnerContact();

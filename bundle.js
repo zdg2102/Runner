@@ -108,24 +108,25 @@
 	};
 	
 	RunnerGame.prototype.draw = function (ctx) {
-	  ctx.fillStyle = 'rgb(159, 182, 205)';
+	  ctx.fillStyle = 'rgb(139, 162, 185)';
+	  // ctx.fillStyle = 'rgb(159, 182, 205)';
 	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
 	  this.allObjects().forEach(function (obj) {
 	    obj.draw.call(obj, ctx);
 	  });
-	  // if (!this.isInIntro) {
-	  //   this.screens.displayScore(ctx);
-	  // }
+	  if (!this.isInIntro) {
+	    this.screens.displayScore(ctx);
+	  }
 	  // // draw pause overlay if game is paused
 	  if (this.isPaused) {
 	    this.screens.displayPause(ctx);
 	  }
-	  // if (this.isInIntro) {
-	  //   this.screens.displayTitleScreen(ctx);
-	  // }
-	  // if (this.isRunnerDead) {
-	  //   this.screens.displayDeath(ctx);
-	  // }
+	  if (this.isInIntro) {
+	    this.screens.displayTitleScreen(ctx);
+	  }
+	  if (this.isRunnerDead) {
+	    this.screens.displayDeath(ctx);
+	  }
 	};
 	
 	RunnerGame.prototype.closeInfoScreen = function () {
@@ -159,8 +160,8 @@
 	};
 	
 	RunnerGame.prototype.advanceFrame = function () {
-	  if (!this.isPaused) {
-	  //  && !this.isInIntro && !this.isRunnerDead) {
+	  // if (!this.isPaused) {
+	   if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
 	    GameControls.checkHeldKeys(this.runner);
 	    this.checkRunnerDeath();
 	    this.checkRunnerContact();
@@ -224,6 +225,9 @@
 	    key('up', function () {
 	      runner.jump();
 	    });
+	    key('w', function () {
+	      runner.jump();
+	    });
 	    key('p', function () {
 	      game.togglePause();
 	    });
@@ -236,6 +240,10 @@
 	    if (key.isPressed('left')) {
 	      runner.runAccelerate('left');
 	    } else if (key.isPressed('right')) {
+	      runner.runAccelerate('right');
+	    } else if (key.isPressed('a')) {
+	      runner.runAccelerate('left');
+	    } else if (key.isPressed('d')) {
 	      runner.runAccelerate('right');
 	    }
 	  }
@@ -296,7 +304,7 @@
 	
 	  friction: 2,
 	
-	  scrollSpeed: 0, // 8
+	  scrollSpeed: 8,
 	
 	  parallaxFactor: 0.3,
 	
@@ -316,7 +324,7 @@
 	
 	  jumpMaxMagnitude: 250,
 	
-	  numJumps: 10000 //2
+	  numJumps: 2
 	
 	};
 	
@@ -599,6 +607,16 @@
 	    }
 	  },
 	
+	  handleBottomContact: function (movingObj, stopPos) {
+	    if (movingObj.vel[1] < 0) {
+	      return {
+	        contactType: 'collision',
+	        fromDirection: 'bottom',
+	        stopPos: stopPos
+	      };
+	    }
+	  },
+	
 	  determineCrossing: function (nowX, nowY, velX, velY, surfaceX,
 	    surfaceXTop, surfaceXBottom, surfaceY, surfaceYLeft,
 	    surfaceYRight) {
@@ -696,6 +714,7 @@
 	    }
 	    if (!contactInfo && objABottom >= objBTop &&
 	      objALeft <= objBRight) {
+	      // collision on objA's bottom-left corner
 	      contactInfo = this.determineCrossing(
 	        objALeft, objABottom, objA.vel[0], objA.vel[1],
 	        objBRight, objBTop, objBBottom, objBTop, objBLeft,
@@ -710,7 +729,42 @@
 	        contactInfo.stopPos = [objBRight,
 	        contactInfo.contactPos[1] - aHeight];
 	      }
-	
+	    }
+	    if (!contactInfo && objATop <= objBBottom &&
+	      objARight >= objBLeft) {
+	      // collision on objA's top-right corner
+	      contactInfo = this.determineCrossing(
+	        objARight, objATop, objA.vel[0], objA.vel[1],
+	        objBLeft, objBTop, objBBottom, objBBottom, objBLeft,
+	        objBRight
+	      );
+	      if (contactInfo && contactInfo.surface === 'y') {
+	        contactInfo.surface = 'bottom';
+	        contactInfo.stopPos = [contactInfo.contactPos[0] - aWidth,
+	        objBBottom];
+	      } else if (contactInfo && contactInfo.surface === 'x') {
+	        contactInfo.surface = 'left';
+	        contactInfo.stopPos = [objBLeft,
+	        contactInfo.contactPos[1]];
+	      }
+	    }
+	    if (!contactInfo && objATop <= objBBottom &&
+	      objALeft <= objBRight) {
+	      // collision on objA's top-left corner
+	      contactInfo = this.determineCrossing(
+	        objALeft, objATop, objA.vel[0], objA.vel[1],
+	        objBRight, objBTop, objBBottom, objBBottom, objBLeft,
+	        objBRight
+	      );
+	      if (contactInfo && contactInfo.surface === 'y') {
+	        contactInfo.surface = 'bottom';
+	        contactInfo.stopPos = [contactInfo.contactPos[0],
+	        objBBottom];
+	      } else if (contactInfo && contactInfo.surface === 'x') {
+	        contactInfo.surface = 'right';
+	        contactInfo.stopPos = [objBRight,
+	        contactInfo.contactPos[1]];
+	      }
 	    }
 	
 	    if (contactInfo) {
@@ -774,9 +828,9 @@
 	
 	RunnerAnimator.prototype.draw = function (ctx) {
 	  // draw frame for debugging
-	  ctx.fillStyle = 'blue';
-	  ctx.fillRect(this.runner.pos[0], this.runner.pos[1],
-	    this.runner.width, this.runner.height);
+	  // ctx.fillStyle = 'blue';
+	  // ctx.fillRect(this.runner.pos[0], this.runner.pos[1],
+	  //   this.runner.width, this.runner.height);
 	
 	  var id = this.runner.frameState + (Math.floor(this.spriteFrame /
 	    gameConstants.framesPerSprite) + 1);
@@ -834,15 +888,15 @@
 	
 	LevelGenerator.prototype.setFirstPlatform = function () {
 	  // guarantee first platform is always in the same position
-	  // var firstPlatform = new Platform([300, 400], 30, 300);
-	  var firstPlatform = new Platform([100, 600], 30, 300);
+	  var firstPlatform = new Platform([300, 400], 30, 300);
+	  // var firstPlatform = new Platform([100, 600], 30, 300);
 	  // also set it as last platform so next numbers can refer
 	  // to it
 	  this.lastPlatform = firstPlatform;
 	  this.platforms.push(firstPlatform);
 	
-	  var testBrick = new Platform([500, 400], 150, 150);
-	  this.platforms.push(testBrick);
+	  // var testBrick = new Platform([500, 200], 150, 150);
+	  // this.platforms.push(testBrick);
 	};
 	
 	LevelGenerator.prototype.lastPlatformTop = function () {
@@ -1035,9 +1089,9 @@
 	    this.g = null;
 	    this.b = null;
 	  } else {
-	    this.r = Math.round(200 + Math.random() * 20);
-	    this.g = Math.round(200 + Math.random() * 20);
-	    this.b = Math.round(200 + Math.random() * 20);
+	    this.r = Math.round(160 + Math.random() * 20);
+	    this.g = Math.round(160 + Math.random() * 20);
+	    this.b = Math.round(160 + Math.random() * 20);
 	  }
 	};
 	
@@ -1150,7 +1204,7 @@
 	
 	Screens.prototype.displayPause = function (ctx) {
 	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+	  ctx.fillRect(0, 0, this.game.frameWidth, this.game.frameHeight);
 	  ctx.fillStyle = 'rgb(255, 255, 255)';
 	  ctx.font = "36px sans-serif";
 	  ctx.fillText("PAUSED", 50, 75);
@@ -1158,14 +1212,14 @@
 	
 	Screens.prototype.displayTitleScreen = function (ctx) {
 	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+	  ctx.fillRect(0, 0, this.game.frameWidth, this.game.frameHeight);
 	  ctx.fillStyle = 'rgb(255, 255, 255)';
 	  ctx.font = '130px sans-serif';
 	  ctx.fillText("RUNNER", 50, 180);
 	  ctx.font = '24px sans-serif';
-	  ctx.fillText("LEFT and RIGHT to run", 50, 300);
-	  ctx.fillText("UP to jump", 50, 350);
-	  ctx.fillText("UP again to double jump", 50, 400);
+	  ctx.fillText("LEFT and RIGHT (or A and D) to run", 50, 300);
+	  ctx.fillText("UP (or W) to jump", 50, 350);
+	  ctx.fillText("UP (or W) again to double jump", 50, 400);
 	  ctx.fillText("P to pause", 50, 450);
 	  ctx.font = '40px sans-serif';
 	  ctx.fillText("Press Enter to play", 340, 550);
@@ -1173,7 +1227,7 @@
 	
 	Screens.prototype.displayDeath = function (ctx) {
 	  ctx.fillStyle = 'rgba(205, 201, 201, 0.7)';
-	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
+	  ctx.fillRect(0, 0, this.game.frameWidth, this.game.frameHeight);
 	  ctx.fillStyle = 'rgb(255, 255, 255)';
 	  ctx.font = '40px sans-serif';
 	  ctx.fillText("You died", 420, 200);
