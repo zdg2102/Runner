@@ -1172,7 +1172,10 @@
 	  ctx.fillStyle = 'rgb(0, 0, 0)';
 	  ctx.font = "36px sans-serif";
 	  var displayDistance = Math.floor(this.game.runnerDistance / 100);
-	  ctx.fillText(displayDistance + " m", 900, 60);
+	  var x = 900;
+	  var offset = displayDistance.toString().length;
+	  x -= (offset * 20);
+	  ctx.fillText(displayDistance + " m", x, 60);
 	};
 	
 	Screens.prototype.displayPause = function (ctx) {
