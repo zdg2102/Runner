@@ -81,6 +81,7 @@
 	  this.frameWidth = frameWidth;
 	  this.levelGenerator = new LevelGenerator(this);
 	  this.platforms = this.levelGenerator.platforms;
+	  this.mines = this.levelGenerator.mines;
 	  this.backgroundGenerator = new BackgroundGenerator(this);
 	  this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
 	  this.screens = new Screens(this);
@@ -96,11 +97,12 @@
 	  // background objects are added first so everything
 	  // else is drawn on top of them
 	  return this.backgroundObjects.concat(this.platforms)
+	    .concat(this.mines)
 	    .concat([this.runner]);
 	};
 	
 	RunnerGame.prototype.foregroundObjects = function () {
-	  return this.platforms.concat([this.runner]);
+	  return this.platforms.concat(this.mines).concat([this.runner]);
 	};
 	
 	RunnerGame.prototype.environmentObjects = function () {
@@ -865,15 +867,19 @@
 	
 	var gameConstants = __webpack_require__(4);
 	var Platform = __webpack_require__(3);
+	var Mine = __webpack_require__(14);
 	
 	var LevelGenerator = function (game) {
 	  this.game = game;
 	  this.platforms = [];
+	  this.mines = [];
 	  this.nextVerticalPos = 0;
 	  this.nextGap = 0;
 	  this.lastPlatform = null;
+	  this.mineSprite = null;
 	  this.setFirstPlatform();
 	  this.setNextValues();
+	  this.loadMineSprite();
 	};
 	
 	LevelGenerator.prototype.randPlatformHeight = function () {
@@ -884,6 +890,10 @@
 	LevelGenerator.prototype.randPlatformWidth = function () {
 	  return gameConstants.platformMinWidth +
 	    Math.round(gameConstants.platformAddWidth * Math.random());
+	};
+	
+	LevelGenerator.prototype.loadMineSprite = function () {
+	  this.mineSprite = window.document.getElementById('mine');
 	};
 	
 	LevelGenerator.prototype.setFirstPlatform = function () {
@@ -975,6 +985,12 @@
 	    this.platforms.push(newPlatform);
 	    this.setNextValues();
 	  }
+	
+	  // temporarily piggybacking the mines onto here also
+	  if (Math.random() < 0.01) {
+	    var newMine = new Mine([1010, 400], this.mineSprite);
+	    this.mines.push(newMine);
+	  }
 	};
 	
 	LevelGenerator.prototype.checkAndClearOffscreenPlatform = function () {
@@ -982,6 +998,12 @@
 	  for (var i = 0; i < this.platforms.length; i++) {
 	    if (this.platforms[i].pos[0] + this.platforms[i].width < 0) {
 	      this.platforms.splice(i, 1);
+	      return;
+	    }
+	  }
+	  for (i = 0; i < this.mines.length; i++) {
+	    if (this.mines[i].pos[0] + this.mines[i].width < 0) {
+	      this.mines.splice(i, 1);
 	      return;
 	    }
 	  }
@@ -1238,6 +1260,27 @@
 	};
 	
 	module.exports = GameView;
+
+
+/***/ },
+/* 14 */
+/***/ function(module, exports) {
+
+	// mine drawing
+	
+	var Mine = function (pos, sprite) {
+	  this.pos = pos;
+	  this.sprite = sprite;
+	  this.width = 20;
+	};
+	
+	Mine.prototype.draw = function (ctx) {
+	  ctx.drawImage(
+	    this.sprite, this.pos[0], this.pos[1], this.width, this.width
+	  );
+	};
+	
+	module.exports = Mine;
 
 
 /***/ }

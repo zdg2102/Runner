@@ -15,6 +15,7 @@ var RunnerGame = function (frameHeight, frameWidth) {
   this.frameWidth = frameWidth;
   this.levelGenerator = new LevelGenerator(this);
   this.platforms = this.levelGenerator.platforms;
+  this.mines = this.levelGenerator.mines;
   this.backgroundGenerator = new BackgroundGenerator(this);
   this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
   this.screens = new Screens(this);
@@ -30,11 +31,12 @@ RunnerGame.prototype.allObjects = function () {
   // background objects are added first so everything
   // else is drawn on top of them
   return this.backgroundObjects.concat(this.platforms)
+    .concat(this.mines)
     .concat([this.runner]);
 };
 
 RunnerGame.prototype.foregroundObjects = function () {
-  return this.platforms.concat([this.runner]);
+  return this.platforms.concat(this.mines).concat([this.runner]);
 };
 
 RunnerGame.prototype.environmentObjects = function () {

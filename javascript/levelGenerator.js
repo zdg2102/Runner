@@ -2,15 +2,19 @@
 
 var gameConstants = require('./gameConstants');
 var Platform = require('./platform');
+var Mine = require('./mine');
 
 var LevelGenerator = function (game) {
   this.game = game;
   this.platforms = [];
+  this.mines = [];
   this.nextVerticalPos = 0;
   this.nextGap = 0;
   this.lastPlatform = null;
+  this.mineSprite = null;
   this.setFirstPlatform();
   this.setNextValues();
+  this.loadMineSprite();
 };
 
 LevelGenerator.prototype.randPlatformHeight = function () {
@@ -21,6 +25,10 @@ LevelGenerator.prototype.randPlatformHeight = function () {
 LevelGenerator.prototype.randPlatformWidth = function () {
   return gameConstants.platformMinWidth +
     Math.round(gameConstants.platformAddWidth * Math.random());
+};
+
+LevelGenerator.prototype.loadMineSprite = function () {
+  this.mineSprite = window.document.getElementById('mine');
 };
 
 LevelGenerator.prototype.setFirstPlatform = function () {
@@ -112,6 +120,12 @@ LevelGenerator.prototype.checkAndAddPlatform = function () {
     this.platforms.push(newPlatform);
     this.setNextValues();
   }
+
+  // temporarily piggybacking the mines onto here also
+  if (Math.random() < 0.01) {
+    var newMine = new Mine([1010, 400], this.mineSprite);
+    this.mines.push(newMine);
+  }
 };
 
 LevelGenerator.prototype.checkAndClearOffscreenPlatform = function () {
@@ -119,6 +133,12 @@ LevelGenerator.prototype.checkAndClearOffscreenPlatform = function () {
   for (var i = 0; i < this.platforms.length; i++) {
     if (this.platforms[i].pos[0] + this.platforms[i].width < 0) {
       this.platforms.splice(i, 1);
+      return;
+    }
+  }
+  for (i = 0; i < this.mines.length; i++) {
+    if (this.mines[i].pos[0] + this.mines[i].width < 0) {
+      this.mines.splice(i, 1);
       return;
     }
   }
