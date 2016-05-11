@@ -47,7 +47,7 @@
 	// loader for attaching to canvas DOM element
 	
 	var RunnerGame = __webpack_require__(1);
-	var GameView = __webpack_require__(13);
+	var GameView = __webpack_require__(14);
 	
 	window.document.addEventListener('DOMContentLoaded', function () {
 	  var canvas = window.document.getElementById('canvas');
@@ -64,7 +64,7 @@
 /* 1 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// main game file
+	// controls main game flow, frame generation, scrolling
 	
 	var GameControls = __webpack_require__(2);
 	var Platform = __webpack_require__(3);
@@ -73,8 +73,8 @@
 	var Physics = __webpack_require__(7);
 	var gameConstants = __webpack_require__(4);
 	var LevelGenerator = __webpack_require__(9);
-	var BackgroundGenerator = __webpack_require__(10);
-	var Screens = __webpack_require__(12);
+	var BackgroundGenerator = __webpack_require__(11);
+	var Screens = __webpack_require__(13);
 	
 	var RunnerGame = function (frameHeight, frameWidth) {
 	  this.frameHeight = frameHeight;
@@ -97,21 +97,22 @@
 	  // background objects are added first so everything
 	  // else is drawn on top of them
 	  return this.backgroundObjects.concat(this.platforms)
-	    .concat(this.mines)
 	    .concat([this.runner]);
 	};
 	
 	RunnerGame.prototype.foregroundObjects = function () {
-	  return this.platforms.concat(this.mines).concat([this.runner]);
+	  // objects that need to scroll at the foreground speed
+	  return this.platforms.concat([this.runner]);
 	};
 	
 	RunnerGame.prototype.environmentObjects = function () {
+	  // objects that the runner can collide with
 	  return this.platforms.slice();
 	};
 	
 	RunnerGame.prototype.draw = function (ctx) {
+	  // draw sky background
 	  ctx.fillStyle = 'rgb(139, 162, 185)';
-	  // ctx.fillStyle = 'rgb(159, 182, 205)';
 	  ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
 	  this.allObjects().forEach(function (obj) {
 	    obj.draw.call(obj, ctx);
@@ -119,7 +120,6 @@
 	  if (!this.isInIntro) {
 	    this.screens.displayScore(ctx);
 	  }
-	  // // draw pause overlay if game is paused
 	  if (this.isPaused) {
 	    this.screens.displayPause(ctx);
 	  }
@@ -142,6 +142,7 @@
 	};
 	
 	RunnerGame.prototype.reset = function () {
+	  // TODO: constructor should call reset to avoid duplicate code
 	  this.isRunnerDead = false;
 	  this.isInIntro = true;
 	  this.runner.pos = [320, 350];
@@ -152,6 +153,7 @@
 	  this.runner.runnerAnimator.spriteFrame = 1;
 	  this.levelGenerator = new LevelGenerator(this);
 	  this.platforms = this.levelGenerator.platforms;
+	  this.mines = this.levelGenerator.mines;
 	  this.backgroundGenerator = new BackgroundGenerator(this);
 	  this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
 	  this.runnerDistance = 0;
@@ -162,7 +164,6 @@
 	};
 	
 	RunnerGame.prototype.advanceFrame = function () {
-	  // if (!this.isPaused) {
 	   if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
 	    GameControls.checkHeldKeys(this.runner);
 	    this.checkRunnerDeath();
@@ -177,6 +178,8 @@
 	};
 	
 	RunnerGame.prototype.scroll = function () {
+	  // set separate scroll movements for foreground and background
+	  // (to produce parallax effect)
 	  var scrollMovement = [-(gameConstants.scrollSpeed), 0];
 	  var parallaxScrollMovement = [
 	    -(gameConstants.scrollSpeed * gameConstants.parallaxFactor),
@@ -204,9 +207,8 @@
 	
 	RunnerGame.prototype.checkRunnerDeath = function () {
 	  // determine if the runner died
-	  // going off the top of the screen won't kill you
-	  if (this.runner.pos[0] > this.frameWidth ||
-	    this.runner.pos[0] + this.runner.width < 0 ||
+	  // going off the top or front of the screen won't kill you
+	  if (this.runner.pos[0] + this.runner.width < 0 ||
 	    this.runner.pos[1] > this.frameHeight) {
 	    this.isRunnerDead = true;
 	  }
@@ -290,7 +292,7 @@
 /* 4 */
 /***/ function(module, exports) {
 
-	// all constants, to allow for easier adjustments
+	// all constants here, to allow for easier adjustment/debugging
 	
 	var gameConstants = {
 	
@@ -404,7 +406,7 @@
 	  // uses state to set sprite
 	  this.runnerAnimator.setSprite(newState);
 	
-	  // also control for size
+	  // adjust for differing sprite size during flip
 	  if (newState === 'flip-right' ||
 	  newState === 'flip-left') {
 	    this.height = 40;
@@ -416,7 +418,6 @@
 	
 	  this.prevFrameState = this.frameState;
 	  this.frameState = newState;
-	
 	};
 	
 	Runner.prototype.handleContact = function (contact) {
@@ -435,7 +436,6 @@
 	  }
 	  if (contact.contactType === 'stick') {
 	    this.jumpsRemaining = gameConstants.numJumps;
-	    // this.stickToWall(); not written yet
 	    this.lastContactType = 'stick';
 	  }
 	};
@@ -445,7 +445,7 @@
 	};
 	
 	Runner.prototype.collideWithPlatform = function (stopPos) {
-	  // fully stop (not realistic, but feels less slippery)
+	  // fully stops (not realistic, but feels less slippery)
 	  this.vel = [0, 0];
 	  this.pos = stopPos;
 	};
@@ -477,7 +477,7 @@
 	
 	Runner.prototype.jump = function () {
 	  if (this.jumpsRemaining > 0) {
-	    // change vertical velocity immediately to jump velocity
+	    // changes vertical velocity immediately to jump velocity
 	    // regardless of previous velocity (otherwise double jumps
 	    // feel weak)
 	    this.vel = [this.vel[0], -(gameConstants.jumpVel)];
@@ -561,7 +561,6 @@
 	  handleTopContact: function (movingObj, stopPos) {
 	    // if the only vertical velocity is gravity,
 	    // movingObject is standing on top of other object
-	    // console.log(movingObj.vel[1])
 	    if (movingObj.vel[1] === gameConstants.gravity) {
 	      return {
 	        contactType: 'stand'
@@ -644,7 +643,7 @@
 	      !Util.isBetween(projectedY, surfaceXTop, surfaceXBottom)) {
 	      scalingX = null;
 	    }
-	    // need to include additional checks for zero to avoid
+	    // includes additional checks for zero to avoid
 	    // evaluating them as false
 	    if ((scalingY || scalingY === 0) &&
 	      (scalingX || scalingX === 0)) {
@@ -676,8 +675,8 @@
 	    // otherwise returns null
 	
 	    // set up variable aliases for easier reading
-	    // need to account for the runner's relevant
-	    // height having a different name
+	    // (height and width account for the runner's relevant
+	    // height and width variables having a different name)
 	    var aHeight = objA.collideHeight || objA.height;
 	    var aWidth = objA.collideWidth || objA.width;
 	    var bHeight = objB.collideHeight || objB.height;
@@ -829,11 +828,6 @@
 	};
 	
 	RunnerAnimator.prototype.draw = function (ctx) {
-	  // draw frame for debugging
-	  // ctx.fillStyle = 'blue';
-	  // ctx.fillRect(this.runner.pos[0], this.runner.pos[1],
-	  //   this.runner.width, this.runner.height);
-	
 	  var id = this.runner.frameState + (Math.floor(this.spriteFrame /
 	    gameConstants.framesPerSprite) + 1);
 	  var sprite = this.spriteAssets[id];
@@ -867,7 +861,7 @@
 	
 	var gameConstants = __webpack_require__(4);
 	var Platform = __webpack_require__(3);
-	var Mine = __webpack_require__(14);
+	var Mine = __webpack_require__(10);
 	
 	var LevelGenerator = function (game) {
 	  this.game = game;
@@ -879,7 +873,8 @@
 	  this.mineSprite = null;
 	  this.setFirstPlatform();
 	  this.setNextValues();
-	  this.loadMineSprite();
+	  // TODO: set up mine generation
+	  // this.loadMineSprite();
 	};
 	
 	LevelGenerator.prototype.randPlatformHeight = function () {
@@ -899,14 +894,10 @@
 	LevelGenerator.prototype.setFirstPlatform = function () {
 	  // guarantee first platform is always in the same position
 	  var firstPlatform = new Platform([300, 400], 30, 300);
-	  // var firstPlatform = new Platform([100, 600], 30, 300);
-	  // also set it as last platform so next numbers can refer
+	  // set it as last platform so next generation can refer
 	  // to it
 	  this.lastPlatform = firstPlatform;
 	  this.platforms.push(firstPlatform);
-	
-	  // var testBrick = new Platform([500, 200], 150, 150);
-	  // this.platforms.push(testBrick);
 	};
 	
 	LevelGenerator.prototype.lastPlatformTop = function () {
@@ -961,10 +952,6 @@
 	  }
 	
 	  return maxGap;
-	
-	
-	  // return Math.round(maxGap / 2) + Math.round((maxGap / 2) *
-	  // Math.random());
 	};
 	
 	LevelGenerator.prototype.checkAndAddPlatform = function () {
@@ -984,12 +971,6 @@
 	    this.lastPlatform = newPlatform;
 	    this.platforms.push(newPlatform);
 	    this.setNextValues();
-	  }
-	
-	  // temporarily piggybacking the mines onto here also
-	  if (Math.random() < 0.01) {
-	    var newMine = new Mine([1010, 400], this.mineSprite);
-	    this.mines.push(newMine);
 	  }
 	};
 	
@@ -1015,17 +996,41 @@
 
 /***/ },
 /* 10 */
+/***/ function(module, exports) {
+
+	// mine that explodes on player collision
+	
+	var Mine = function (pos, sprite) {
+	  this.pos = pos;
+	  this.sprite = sprite;
+	  this.width = 20;
+	};
+	
+	Mine.prototype.draw = function (ctx) {
+	  ctx.drawImage(
+	    this.sprite, this.pos[0], this.pos[1], this.width, this.width
+	  );
+	};
+	
+	module.exports = Mine;
+
+
+/***/ },
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// for filling the background
+	// generates, stores, and deletes background objects
 	
-	var Building = __webpack_require__(11);
+	var Building = __webpack_require__(12);
 	var gameConstants = __webpack_require__(4);
 	
 	var BackgroundGenerator = function (game) {
 	  this.game = game;
 	  this.backgroundObjects = [];
 	  this.lastObject = null;
+	  // all buildings are as tall as the frame, to change the
+	  // height the top is drawn lower and the bottom is pushed
+	  // off the screen
 	  this.buildingHeight = this.game.frameHeight;
 	  this.populateInitialScreen();
 	};
@@ -1078,10 +1083,10 @@
 
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
-	// building outline for background fill
+	// building drawn in the background
 	
 	var gameConstants = __webpack_require__(4);
 	
@@ -1105,7 +1110,8 @@
 	};
 	
 	Building.prototype.setColor = function () {
-	  // every fifth building or so make a gap
+	  // null color means building will be invisible (show up as a gap
+	  // between buildings)
 	  if (Math.random() < 0.2) {
 	    this.r = null;
 	    this.g = null;
@@ -1181,7 +1187,7 @@
 
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports) {
 
 	// handles screen-level display information
@@ -1236,7 +1242,7 @@
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports) {
 
 	// handles game's interaction wtih canvas element
@@ -1260,27 +1266,6 @@
 	};
 	
 	module.exports = GameView;
-
-
-/***/ },
-/* 14 */
-/***/ function(module, exports) {
-
-	// mine drawing
-	
-	var Mine = function (pos, sprite) {
-	  this.pos = pos;
-	  this.sprite = sprite;
-	  this.width = 20;
-	};
-	
-	Mine.prototype.draw = function (ctx) {
-	  ctx.drawImage(
-	    this.sprite, this.pos[0], this.pos[1], this.width, this.width
-	  );
-	};
-	
-	module.exports = Mine;
 
 
 /***/ }

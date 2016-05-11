@@ -14,7 +14,8 @@ var LevelGenerator = function (game) {
   this.mineSprite = null;
   this.setFirstPlatform();
   this.setNextValues();
-  this.loadMineSprite();
+  // TODO: set up mine generation
+  // this.loadMineSprite();
 };
 
 LevelGenerator.prototype.randPlatformHeight = function () {
@@ -34,14 +35,10 @@ LevelGenerator.prototype.loadMineSprite = function () {
 LevelGenerator.prototype.setFirstPlatform = function () {
   // guarantee first platform is always in the same position
   var firstPlatform = new Platform([300, 400], 30, 300);
-  // var firstPlatform = new Platform([100, 600], 30, 300);
-  // also set it as last platform so next numbers can refer
+  // set it as last platform so next generation can refer
   // to it
   this.lastPlatform = firstPlatform;
   this.platforms.push(firstPlatform);
-
-  // var testBrick = new Platform([500, 200], 150, 150);
-  // this.platforms.push(testBrick);
 };
 
 LevelGenerator.prototype.lastPlatformTop = function () {
@@ -96,10 +93,6 @@ LevelGenerator.prototype.platformGap = function () {
   }
 
   return maxGap;
-
-
-  // return Math.round(maxGap / 2) + Math.round((maxGap / 2) *
-  // Math.random());
 };
 
 LevelGenerator.prototype.checkAndAddPlatform = function () {
@@ -119,12 +112,6 @@ LevelGenerator.prototype.checkAndAddPlatform = function () {
     this.lastPlatform = newPlatform;
     this.platforms.push(newPlatform);
     this.setNextValues();
-  }
-
-  // temporarily piggybacking the mines onto here also
-  if (Math.random() < 0.01) {
-    var newMine = new Mine([1010, 400], this.mineSprite);
-    this.mines.push(newMine);
   }
 };
 

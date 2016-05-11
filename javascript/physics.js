@@ -30,7 +30,6 @@ var Physics = {
   handleTopContact: function (movingObj, stopPos) {
     // if the only vertical velocity is gravity,
     // movingObject is standing on top of other object
-    // console.log(movingObj.vel[1])
     if (movingObj.vel[1] === gameConstants.gravity) {
       return {
         contactType: 'stand'
@@ -113,7 +112,7 @@ var Physics = {
       !Util.isBetween(projectedY, surfaceXTop, surfaceXBottom)) {
       scalingX = null;
     }
-    // need to include additional checks for zero to avoid
+    // includes additional checks for zero to avoid
     // evaluating them as false
     if ((scalingY || scalingY === 0) &&
       (scalingX || scalingX === 0)) {
@@ -145,8 +144,8 @@ var Physics = {
     // otherwise returns null
 
     // set up variable aliases for easier reading
-    // need to account for the runner's relevant
-    // height having a different name
+    // (height and width account for the runner's relevant
+    // height and width variables having a different name)
     var aHeight = objA.collideHeight || objA.height;
     var aWidth = objA.collideWidth || objA.width;
     var bHeight = objB.collideHeight || objB.height;

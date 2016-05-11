@@ -1,4 +1,4 @@
-// for filling the background
+// generates, stores, and deletes background objects
 
 var Building = require('./building');
 var gameConstants = require('./gameConstants');
@@ -7,6 +7,9 @@ var BackgroundGenerator = function (game) {
   this.game = game;
   this.backgroundObjects = [];
   this.lastObject = null;
+  // all buildings are as tall as the frame, to change the
+  // height the top is drawn lower and the bottom is pushed
+  // off the screen
   this.buildingHeight = this.game.frameHeight;
   this.populateInitialScreen();
 };

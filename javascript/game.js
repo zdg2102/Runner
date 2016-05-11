@@ -1,4 +1,4 @@
-// main game file
+// controls main game flow, frame generation, scrolling
 
 var GameControls = require('./gameControls');
 var Platform = require('./platform');
@@ -31,21 +31,22 @@ RunnerGame.prototype.allObjects = function () {
   // background objects are added first so everything
   // else is drawn on top of them
   return this.backgroundObjects.concat(this.platforms)
-    .concat(this.mines)
     .concat([this.runner]);
 };
 
 RunnerGame.prototype.foregroundObjects = function () {
-  return this.platforms.concat(this.mines).concat([this.runner]);
+  // objects that need to scroll at the foreground speed
+  return this.platforms.concat([this.runner]);
 };
 
 RunnerGame.prototype.environmentObjects = function () {
+  // objects that the runner can collide with
   return this.platforms.slice();
 };
 
 RunnerGame.prototype.draw = function (ctx) {
+  // draw sky background
   ctx.fillStyle = 'rgb(139, 162, 185)';
-  // ctx.fillStyle = 'rgb(159, 182, 205)';
   ctx.fillRect(0, 0, this.frameWidth, this.frameHeight);
   this.allObjects().forEach(function (obj) {
     obj.draw.call(obj, ctx);
@@ -53,7 +54,6 @@ RunnerGame.prototype.draw = function (ctx) {
   if (!this.isInIntro) {
     this.screens.displayScore(ctx);
   }
-  // // draw pause overlay if game is paused
   if (this.isPaused) {
     this.screens.displayPause(ctx);
   }
@@ -76,6 +76,7 @@ RunnerGame.prototype.closeInfoScreen = function () {
 };
 
 RunnerGame.prototype.reset = function () {
+  // TODO: constructor should call reset to avoid duplicate code
   this.isRunnerDead = false;
   this.isInIntro = true;
   this.runner.pos = [320, 350];
@@ -86,6 +87,7 @@ RunnerGame.prototype.reset = function () {
   this.runner.runnerAnimator.spriteFrame = 1;
   this.levelGenerator = new LevelGenerator(this);
   this.platforms = this.levelGenerator.platforms;
+  this.mines = this.levelGenerator.mines;
   this.backgroundGenerator = new BackgroundGenerator(this);
   this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
   this.runnerDistance = 0;
@@ -96,7 +98,6 @@ RunnerGame.prototype.togglePause = function () {
 };
 
 RunnerGame.prototype.advanceFrame = function () {
-  // if (!this.isPaused) {
    if (!this.isPaused && !this.isInIntro && !this.isRunnerDead) {
     GameControls.checkHeldKeys(this.runner);
     this.checkRunnerDeath();
@@ -111,6 +112,8 @@ RunnerGame.prototype.advanceFrame = function () {
 };
 
 RunnerGame.prototype.scroll = function () {
+  // set separate scroll movements for foreground and background
+  // (to produce parallax effect)
   var scrollMovement = [-(gameConstants.scrollSpeed), 0];
   var parallaxScrollMovement = [
     -(gameConstants.scrollSpeed * gameConstants.parallaxFactor),
@@ -138,9 +141,8 @@ RunnerGame.prototype.checkRunnerContact = function () {
 
 RunnerGame.prototype.checkRunnerDeath = function () {
   // determine if the runner died
-  // going off the top of the screen won't kill you
-  if (this.runner.pos[0] > this.frameWidth ||
-    this.runner.pos[0] + this.runner.width < 0 ||
+  // going off the top or front of the screen won't kill you
+  if (this.runner.pos[0] + this.runner.width < 0 ||
     this.runner.pos[1] > this.frameHeight) {
     this.isRunnerDead = true;
   }

@@ -1,4 +1,4 @@
-// all constants, to allow for easier adjustments
+// all constants here, to allow for easier adjustment/debugging
 
 var gameConstants = {
 

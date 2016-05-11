@@ -1,4 +1,4 @@
-// mine drawing
+// mine that explodes on player collision
 
 var Mine = function (pos, sprite) {
   this.pos = pos;

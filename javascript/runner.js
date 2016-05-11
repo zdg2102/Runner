@@ -65,7 +65,7 @@ Runner.prototype.determineState = function () {
   // uses state to set sprite
   this.runnerAnimator.setSprite(newState);
 
-  // also control for size
+  // adjust for differing sprite size during flip
   if (newState === 'flip-right' ||
   newState === 'flip-left') {
     this.height = 40;
@@ -77,7 +77,6 @@ Runner.prototype.determineState = function () {
 
   this.prevFrameState = this.frameState;
   this.frameState = newState;
-
 };
 
 Runner.prototype.handleContact = function (contact) {
@@ -96,7 +95,6 @@ Runner.prototype.handleContact = function (contact) {
   }
   if (contact.contactType === 'stick') {
     this.jumpsRemaining = gameConstants.numJumps;
-    // this.stickToWall(); not written yet
     this.lastContactType = 'stick';
   }
 };
@@ -106,7 +104,7 @@ Runner.prototype.standOnPlatform = function () {
 };
 
 Runner.prototype.collideWithPlatform = function (stopPos) {
-  // fully stop (not realistic, but feels less slippery)
+  // fully stops (not realistic, but feels less slippery)
   this.vel = [0, 0];
   this.pos = stopPos;
 };
@@ -138,7 +136,7 @@ Runner.prototype.runAccelerate = function (dir) {
 
 Runner.prototype.jump = function () {
   if (this.jumpsRemaining > 0) {
-    // change vertical velocity immediately to jump velocity
+    // changes vertical velocity immediately to jump velocity
     // regardless of previous velocity (otherwise double jumps
     // feel weak)
     this.vel = [this.vel[0], -(gameConstants.jumpVel)];

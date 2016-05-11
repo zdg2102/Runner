@@ -1,4 +1,4 @@
-// building outline for background fill
+// building drawn in the background
 
 var gameConstants = require('./gameConstants');
 
@@ -22,7 +22,8 @@ var Building = function (pos, width, height, game) {
 };
 
 Building.prototype.setColor = function () {
-  // every fifth building or so make a gap
+  // null color means building will be invisible (show up as a gap
+  // between buildings)
   if (Math.random() < 0.2) {
     this.r = null;
     this.g = null;

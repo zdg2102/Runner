@@ -31,11 +31,6 @@ RunnerAnimator.prototype.loadSpriteAssets = function () {
 };
 
 RunnerAnimator.prototype.draw = function (ctx) {
-  // draw frame for debugging
-  // ctx.fillStyle = 'blue';
-  // ctx.fillRect(this.runner.pos[0], this.runner.pos[1],
-  //   this.runner.width, this.runner.height);
-
   var id = this.runner.frameState + (Math.floor(this.spriteFrame /
     gameConstants.framesPerSprite) + 1);
   var sprite = this.spriteAssets[id];
