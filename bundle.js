@@ -87,6 +87,7 @@
 	  this.screens = new Screens(this);
 	  this.runner = new Runner([320, 350]);
 	  this.runnerDistance = 0;
+	  this.highScore = 0;
 	  this.isPaused = false;
 	  this.isInIntro = true;
 	  this.isRunnerDead = false;
@@ -156,6 +157,9 @@
 	  this.mines = this.levelGenerator.mines;
 	  this.backgroundGenerator = new BackgroundGenerator(this);
 	  this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
+	  if (this.runnerDistance > this.highScore) {
+	    this.highScore = this.runnerDistance;
+	  }
 	  this.runnerDistance = 0;
 	};
 	
@@ -1227,6 +1231,16 @@
 	  ctx.fillText("P to pause", 50, 450);
 	  ctx.font = '40px sans-serif';
 	  ctx.fillText("Press Enter to play", 340, 550);
+	  if (this.game.highScore > 0) {
+	    var displayScore = Math.floor(this.game.highScore / 100);
+	    ctx.font = '28px sans-serif';
+	    ctx.fillText("HIGH SCORE", 720, 100);
+	    var x = 890;
+	    var offset = displayScore.toString().length;
+	    x -= (offset * 33);
+	    ctx.font = '60px sans-serif';
+	    ctx.fillText(displayScore, x, 160);
+	  }
 	};
 	
 	Screens.prototype.displayDeath = function (ctx) {
@@ -1234,8 +1248,16 @@
 	  ctx.fillRect(0, 0, this.game.frameWidth, this.game.frameHeight);
 	  ctx.fillStyle = 'rgb(255, 255, 255)';
 	  ctx.font = '40px sans-serif';
-	  ctx.fillText("You died", 420, 200);
+	  ctx.fillText("YOU DIED", 420, 200);
 	  ctx.fillText("Press Enter to restart", 300, 550);
+	  var displayDistance = Math.floor(this.game.runnerDistance / 100);
+	  var displayScore = Math.floor(this.game.highScore / 100);
+	  ctx.fillText("Your score: " + displayDistance, 300, 320);
+	  if (this.game.runnerDistance > this.game.highScore) {
+	    ctx.fillText("NEW HIGH SCORE", 300, 380);
+	  } else {
+	    ctx.fillText("High score: " + displayScore, 300, 380);
+	  }
 	};
 	
 	module.exports = Screens;

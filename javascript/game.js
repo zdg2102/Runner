@@ -21,6 +21,7 @@ var RunnerGame = function (frameHeight, frameWidth) {
   this.screens = new Screens(this);
   this.runner = new Runner([320, 350]);
   this.runnerDistance = 0;
+  this.highScore = 0;
   this.isPaused = false;
   this.isInIntro = true;
   this.isRunnerDead = false;
@@ -90,6 +91,9 @@ RunnerGame.prototype.reset = function () {
   this.mines = this.levelGenerator.mines;
   this.backgroundGenerator = new BackgroundGenerator(this);
   this.backgroundObjects = this.backgroundGenerator.backgroundObjects;
+  if (this.runnerDistance > this.highScore) {
+    this.highScore = this.runnerDistance;
+  }
   this.runnerDistance = 0;
 };
 
